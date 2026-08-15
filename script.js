@@ -1,5 +1,3 @@
-import { runPPOCR } from "./ocr/ppocr.js";
-
 const video = document.getElementById("camera");
 
 const startButton =
@@ -467,7 +465,7 @@ cropSelection.addEventListener(
    CREATE CROPPED IMAGE
    ========================= */
 
-cropButton.addEventListener("click", async () => {
+cropButton.addEventListener("click", () => {
 
     const image =
         previewImage;
@@ -587,26 +585,9 @@ cropButton.addEventListener("click", async () => {
 
 
     console.log(
-    "Code i crop pinis."
-);
-
-try {
-
-    const paddleResult =
-        await runPPOCR(cropCanvas);
-
-    console.log(
-        "PADDLE RESULT:",
-        paddleResult
+        "Code i crop pinis."
     );
-
-} catch (error) {
-
-    console.error(
-        "PaddleOCR failed:",
-        error
-    );
-}
+    runOCR();
 });
 
 
