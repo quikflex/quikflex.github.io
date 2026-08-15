@@ -5,53 +5,52 @@ const canvas = document.getElementById("captureCanvas");
 
 let stream = null;
 
-async function startCamera() {
+startButton.addEventListener("click", async () => {
+    console.log("Start camera button pressed");
+
     try {
         stream = await navigator.mediaDevices.getUserMedia({
             video: {
-                facingMode: {
-                    ideal: "environment"
-                }
+                facingMode: "environment"
             },
             audio: false
         });
 
+        console.log("Camera permission granted");
+
         video.srcObject = stream;
 
-        await video.play();
+        /*
+         * Do NOT wait for video.play().
+         * The Capture button should appear regardless.
+         */
+        startButton.style.display = "none";
+        captureButton.style.display = "block";
 
-        // Hide start button
-        startButton.hidden = true;
-
-        // Show capture button
-        captureButton.hidden = false;
+        console.log("Capture button enabled");
 
     } catch (error) {
-        console.error(error);
+        console.error("Camera error:", error);
 
         alert(
             "Kamera i no inap.\n\n" +
-            "Plis givim QuikScan permission long yusim kamera."
+            "Plis checkim camera permission."
         );
     }
-}
+});
 
-function captureImage() {
+captureButton.addEventListener("click", () => {
+    console.log("Capture button pressed");
+
     if (!video.videoWidth || !video.videoHeight) {
+        alert("Kamera i no redi yet.");
         return;
     }
 
-    const context = canvas.getContext("2d");
-
-    /*
-     * For now, capture the entire camera frame.
-     *
-     * We'll add precise scan-frame cropping
-     * when we connect the OCR engine.
-     */
-
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+
+    const context = canvas.getContext("2d");
 
     context.drawImage(
         video,
@@ -62,26 +61,12 @@ function captureImage() {
     );
 
     console.log(
-        "Image i kisim:",
-        canvas.width,
-        "x",
-        canvas.height
+        `Image i kisim: ${canvas.width} × ${canvas.height}`
     );
 
-    // Temporary feedback
-    captureButton.textContent = "✓ Kisim Pinis";
+    captureButton.textContent = "✓ Kisim pinis";
 
     setTimeout(() => {
         captureButton.textContent = "📷 Skanim";
     }, 1000);
-}
-
-startButton.addEventListener(
-    "click",
-    startCamera
-);
-
-captureButton.addEventListener(
-    "click",
-    captureImage
-);
+});
