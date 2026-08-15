@@ -618,36 +618,166 @@ backToCropButton.addEventListener(
    OCR
    ========================= */
 
-ocrButton.addEventListener("click", () => {
+ocrButton.addEventListener("click", async () => {
 
-    console.log("OCR test i stat.");
+    console.log("OCR i stat.");
 
     if (!cropCanvas.width || !cropCanvas.height) {
 
-        console.error("cropCanvas i empty.");
+        const message =
+            "OCR i no inap stat: crop image i no stap.";
 
-        ocrStatus.textContent =
-            "No gat crop image.";
+        console.error(message);
+
+        ocrStatus.textContent = message;
 
         return;
     }
 
-    const image =
-        cropCanvas.toDataURL(
-            "image/png"
-        );
-
-    console.log(
-        "Crop image i redi.",
-        cropCanvas.width,
-        cropCanvas.height
-    );
-
-    croppedImage.src = image;
+    ocrButton.disabled = true;
 
     ocrStatus.textContent =
-        "Piksa bilong crop i stap antap.";
+        "OCR i stat...";
 
+    ocrResult.value = "";
+
+    console.log(
+        "OCR input:",
+        `${cropCanvas.width} × ${cropCanvas.height}px`
+    );
+
+    try {
+
+        if (
+            typeof Tesseract === "undefined"
+        ) {
+
+            throw new Error(
+                "Tesseract.js i no load. Checkim internet connection na Tesseract script."
+            );
+        }
+
+        console.log(
+            "Tesseract.js i stap."
+        );
+
+        console.log(
+            "OCR config: PSM 7, digits only."
+        );
+
+        const result =
+            await Tesseract.recognize(
+                cropCanvas,
+                "eng",
+                {
+
+                    logger: message => {
+
+                        console.log(
+                            "OCR:",
+                            message
+                        );
+
+                        if (
+                            message.status ===
+                            "recognizing text"
+                        ) {
+
+                            const percent =
+                                Math.round(
+                                    message.progress *
+                                    100
+                                );
+
+                            ocrStatus.textContent =
+                                `OCR i wok... ${percent}%`;
+                        }
+                    },
+
+                    tessedit_pageseg_mode:
+                        "7",
+
+                    tessedit_char_whitelist:
+                        "0123456789"
+                }
+            );
+
+
+        console.log(
+            "Tesseract i pinis."
+        );
+
+        console.log(
+            "Raw OCR result:",
+            JSON.stringify(
+                result.data.text
+            )
+        );
+
+
+        const text =
+            result.data.text
+                .replace(/\D/g, "");
+
+
+        console.log(
+            "Cleaned OCR result:",
+            JSON.stringify(text)
+        );
+
+
+        if (!text) {
+
+            console.warn(
+                "Tesseract i no painim wanpela digit."
+            );
+
+            ocrStatus.textContent =
+                "OCR i no painim ol namba. Plis checkim crop na tokples/contrast bilong piksa.";
+
+            return;
+        }
+
+
+        ocrResult.value =
+            text;
+
+        ocrStatus.textContent =
+            `OCR i painim ${text.length} digit. Plis checkim code na stretim sapos em rong.`;
+
+        console.log(
+            `OCR i painim ${text.length} digit:`,
+            text
+        );
+
+    } catch (error) {
+
+        console.error(
+            "OCR FAILED:",
+            error
+        );
+
+        console.error(
+            "Error name:",
+            error?.name
+        );
+
+        console.error(
+            "Error message:",
+            error?.message
+        );
+
+        ocrStatus.textContent =
+            `OCR i fail: ${error?.message || "Unknown error"}`;
+
+    } finally {
+
+        ocrButton.disabled = false;
+
+        console.log(
+            "OCR process i pinis."
+        );
+    }
 });
 
 
