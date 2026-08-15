@@ -38,7 +38,17 @@ const croppedImage =
 
 const backToCropButton =
     document.getElementById("backToCropButton");
+const ocrButton =
+    document.getElementById("ocrButton");
 
+const ocrStatus =
+    document.getElementById("ocrStatus");
+
+const ocrResult =
+    document.getElementById("ocrResult");
+
+const confirmButton =
+    document.getElementById("confirmButton");
 
 let cameraStream = null;
 
@@ -599,6 +609,147 @@ backToCropButton.addEventListener(
 
         console.log(
             "Go bek long crop."
+        );
+    }
+);
+
+/* =========================
+   OCR
+   ========================= */
+
+ocrButton.addEventListener("click", async () => {
+
+    console.log("OCR i stat.");
+
+    if (!cropCanvas.width || !cropCanvas.height) {
+
+        alert(
+            "No gat crop image."
+        );
+
+        return;
+    }
+
+    ocrButton.disabled = true;
+
+    ocrStatus.textContent =
+        "OCR i wok...";
+
+    ocrResult.value = "";
+
+    try {
+
+        const result =
+            await Tesseract.recognize(
+                cropCanvas,
+                "eng",
+                {
+                    logger: message => {
+
+                        console.log(
+                            "OCR:",
+                            message
+                        );
+
+                        if (
+                            message.status ===
+                            "recognizing text"
+                        ) {
+
+                            const percent =
+                                Math.round(
+                                    message.progress * 100
+                                );
+
+                            ocrStatus.textContent =
+                                `OCR i wok... ${percent}%`;
+                        }
+                    }
+                }
+            );
+
+
+        /*
+         * Flex codes are numbers.
+         * Remove everything except digits.
+         */
+
+        const text =
+            result.data.text
+                .replace(/\D/g, "");
+
+
+        ocrResult.value =
+            text;
+
+        ocrStatus.textContent =
+            text
+                ? "Checkim code na stret."
+                : "OCR i no painim code.";
+
+        console.log(
+            "OCR result:",
+            result.data.text
+        );
+
+        console.log(
+            "Cleaned result:",
+            text
+        );
+
+    } catch (error) {
+
+        console.error(
+            "OCR error:",
+            error
+        );
+
+        ocrStatus.textContent =
+            "OCR i gat problem.";
+
+        alert(
+            "OCR i no inap wok."
+        );
+
+    } finally {
+
+        ocrButton.disabled = false;
+    }
+});
+
+
+/* =========================
+   CONFIRM OCR
+   ========================= */
+
+confirmButton.addEventListener(
+    "click",
+    () => {
+
+        const code =
+            ocrResult.value
+                .replace(/\D/g, "");
+
+        if (!code) {
+
+            alert(
+                "Plis putim Flex code pastaim."
+            );
+
+            return;
+        }
+
+        console.log(
+            "Confirmed Flex code:",
+            code
+        );
+
+        /*
+         * USSD will eventually happen here.
+         */
+
+        alert(
+            `Flex code: ${code}`
         );
     }
 );
