@@ -39,9 +39,6 @@ const croppedImage =
 const backToCropButton =
     document.getElementById("backToCropButton");
 
-const ocrButton =
-    document.getElementById("ocrButton");
-
 const ocrStatus =
     document.getElementById("ocrStatus");
 
@@ -51,13 +48,10 @@ const ocrResult =
 const confirmButton =
     document.getElementById("confirmButton");
 
+// ocrButton may have been removed from the DOM (we run OCR automatically),
+// so grab it if it exists and guard uses.
+const ocrButton = document.getElementById("ocrButton");
 
-/* =========================
-   RAPIDOCR
-   ========================= */
-
-let rapidOCR = null;
-let rapidOCRReady = false;
 
 
 /* =========================
@@ -593,7 +587,9 @@ cropButton.addEventListener("click", () => {
     console.log(
         "Code i crop pinis."
     );
+    runOCR();
 });
+
 
 
 /* =========================
@@ -653,9 +649,7 @@ function upscaleCanvas(sourceCanvas, scale = 3) {
 }
 
 
-ocrButton.addEventListener(
-    "click",
-    async () => {
+async function runOCR() {
 
         console.log("OCR i stat.");
 
@@ -690,7 +684,8 @@ ocrButton.addEventListener(
             return;
         }
 
-        ocrButton.disabled = true;
+        // If there's an ocrButton present, disable it while OCR runs.
+        if (ocrButton) ocrButton.disabled = true;
 
         ocrStatus.textContent =
             "OCR i wok...";
@@ -846,10 +841,10 @@ ocrButton.addEventListener(
 
         } finally {
 
-            ocrButton.disabled = false;
+            if (ocrButton) ocrButton.disabled = false;
         }
     }
-);
+
 
 
 /* =========================
