@@ -618,14 +618,35 @@ backToCropButton.addEventListener(
    OCR
    ========================= */
 
-ocrButton.addEventListener("click", async () => {
+ocrButton.addEventListener("click", () => {
 
-    console.log("OCR i stat.");
+    console.log("OCR test i stat.");
 
-    cropCanvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        window.open(url, "_blank");
-    });
+    if (!cropCanvas.width || !cropCanvas.height) {
+
+        console.error("cropCanvas i empty.");
+
+        ocrStatus.textContent =
+            "No gat crop image.";
+
+        return;
+    }
+
+    const image =
+        cropCanvas.toDataURL(
+            "image/png"
+        );
+
+    console.log(
+        "Crop image i redi.",
+        cropCanvas.width,
+        cropCanvas.height
+    );
+
+    croppedImage.src = image;
+
+    ocrStatus.textContent =
+        "Piksa bilong crop i stap antap.";
 
 });
 
