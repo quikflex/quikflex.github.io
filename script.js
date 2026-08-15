@@ -38,6 +38,7 @@ const croppedImage =
 
 const backToCropButton =
     document.getElementById("backToCropButton");
+
 const ocrButton =
     document.getElementById("ocrButton");
 
@@ -49,6 +50,19 @@ const ocrResult =
 
 const confirmButton =
     document.getElementById("confirmButton");
+
+
+/* =========================
+   RAPIDOCR
+   ========================= */
+
+let rapidOCR = null;
+let rapidOCRReady = false;
+
+
+/* =========================
+   CAMERA
+   ========================= */
 
 let cameraStream = null;
 
@@ -478,11 +492,6 @@ cropButton.addEventListener("click", () => {
         cropSelection.getBoundingClientRect();
 
 
-    /*
-     * Work out where the selection
-     * sits relative to the displayed image.
-     */
-
     const scaleX =
         image.naturalWidth /
         imageRect.width;
@@ -510,10 +519,6 @@ cropButton.addEventListener("click", () => {
         selectionRect.height *
         scaleY;
 
-
-    /*
-     * Keep crop inside the image.
-     */
 
     sourceX =
         Math.max(
@@ -613,109 +618,238 @@ backToCropButton.addEventListener(
     }
 );
 
+
+
+
 /* =========================
-   OCR
+   OCR - TESSERACT
    ========================= */
 
-ocrButton.addEventListener("click", async () => {
+function upscaleCanvas(sourceCanvas, scale = 3) {
 
-    console.log("OCR i stat.");
+    const canvas =
+        document.createElement("canvas");
 
-    if (!cropCanvas.width || !cropCanvas.height) {
+    canvas.width =
+        sourceCanvas.width * scale;
 
-        alert(
-            "No gat crop image."
-        );
+    canvas.height =
+        sourceCanvas.height * scale;
 
-        return;
-    }
+    const context =
+        canvas.getContext("2d");
 
-    ocrButton.disabled = true;
+    context.imageSmoothingEnabled = false;
 
-    ocrStatus.textContent =
-        "OCR i wok...";
+    context.drawImage(
+        sourceCanvas,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
 
-    ocrResult.value = "";
+    return canvas;
+}
 
-    try {
 
-        const result =
-            await Tesseract.recognize(
-                cropCanvas,
-                "eng",
-                {
-                    logger: message => {
+ocrButton.addEventListener(
+    "click",
+    async () => {
 
-                        console.log(
-                            "OCR:",
-                            message
-                        );
+        console.log("OCR i stat.");
 
-                        if (
-                            message.status ===
-                            "recognizing text"
-                        ) {
+        if (
+            !cropCanvas.width ||
+            !cropCanvas.height
+        ) {
 
-                            const percent =
-                                Math.round(
-                                    message.progress * 100
-                                );
+            alert(
+                "No gat crop image."
+            );
 
-                            ocrStatus.textContent =
-                                `OCR i wok... ${percent}%`;
-                        }
-                    }
-                }
+            return;
+        }
+
+        /*
+         * Make sure Tesseract actually exists.
+         */
+
+        if (
+            typeof Tesseract ===
+            "undefined"
+        ) {
+
+            console.error(
+                "Tesseract object i no stap."
+            );
+
+            ocrStatus.textContent =
+                "Tesseract i no load.";
+
+            return;
+        }
+
+        ocrButton.disabled = true;
+
+        ocrStatus.textContent =
+            "OCR i wok...";
+
+        ocrResult.value = "";
+
+        try {
+
+            /*
+             * 3× upscale.
+             */
+
+            const ocrCanvas =
+                upscaleCanvas(
+                    cropCanvas,
+                    3
+                );
+
+            console.log(
+                "OCR image:",
+                `${ocrCanvas.width} × ${ocrCanvas.height}px`
             );
 
 
-        /*
-         * Flex codes are numbers.
-         * Remove everything except digits.
-         */
+            /*
+             * Convert the canvas to a JPEG data URL.
+             *
+             * This avoids relying on Tesseract's
+             * Canvas/ImageLike handling on WebKit.
+             */
 
-        const text =
-            result.data.text
-                .replace(/\D/g, "");
+            const imageData =
+                ocrCanvas.toDataURL(
+                    "image/jpeg",
+                    0.95
+                );
+
+            console.log(
+                "OCR image converted to data URL."
+            );
 
 
-        ocrResult.value =
-            text;
+            /*
+             * Run Tesseract.
+             */
 
-        ocrStatus.textContent =
-            text
-                ? "Checkim code na stret."
-                : "OCR i no painim code.";
+            const result =
+                await Tesseract.recognize(
+                    imageData,
+                    "eng",
+                    {
+                        logger: message => {
 
-        console.log(
-            "OCR result:",
-            result.data.text
-        );
+                            console.log(
+                                "OCR:",
+                                message
+                            );
 
-        console.log(
-            "Cleaned result:",
-            text
-        );
+                            if (
+                                message.status ===
+                                "recognizing text"
+                            ) {
 
-    } catch (error) {
+                                const percent =
+                                    Math.round(
+                                        message.progress *
+                                        100
+                                    );
 
-        console.error(
-            "OCR error:",
-            error
-        );
+                                ocrStatus.textContent =
+                                    `OCR i wok... ${percent}%`;
+                            }
+                        }
+                    }
+                );
 
-        ocrStatus.textContent =
-            "OCR i gat problem.";
 
-        alert(
-            "OCR i no inap wok."
-        );
+            console.log(
+                "Tesseract result:",
+                result
+            );
 
-    } finally {
 
-        ocrButton.disabled = false;
+            const rawText =
+                result?.data?.text || "";
+
+            console.log(
+                "OCR raw result:",
+                JSON.stringify(rawText)
+            );
+
+
+            /*
+             * Keep numbers only.
+             */
+
+            const text =
+                rawText.replace(
+                    /\D/g,
+                    ""
+                );
+
+            console.log(
+                "Cleaned OCR result:",
+                JSON.stringify(text)
+            );
+
+
+            if (!text) {
+
+                ocrStatus.textContent =
+                    "OCR i no painim code.";
+
+                return;
+            }
+
+
+            ocrResult.value =
+                text;
+
+            ocrStatus.textContent =
+                "Checkim code na stret.";
+
+            console.log(
+                "Final Flex code:",
+                text
+            );
+
+        } catch (error) {
+
+            console.error(
+                "OCR error:",
+                error
+            );
+
+            console.error(
+                "OCR error name:",
+                error?.name
+            );
+
+            console.error(
+                "OCR error message:",
+                error?.message
+            );
+
+            console.error(
+                "OCR error stack:",
+                error?.stack
+            );
+
+            ocrStatus.textContent =
+                "OCR i no inap wok.";
+
+        } finally {
+
+            ocrButton.disabled = false;
+        }
     }
-});
+);
 
 
 /* =========================
@@ -728,7 +862,11 @@ confirmButton.addEventListener(
 
         const code =
             ocrResult.value
-                .replace(/\D/g, "");
+                .replace(
+                    /\D/g,
+                    ""
+                );
+
 
         if (!code) {
 
@@ -739,10 +877,12 @@ confirmButton.addEventListener(
             return;
         }
 
+
         console.log(
             "Confirmed Flex code:",
             code
         );
+
 
         /*
          * USSD will eventually happen here.
