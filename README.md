@@ -14,7 +14,7 @@ QuikScan uses OCR (Optical Character Recognition) to easily scan flex cards and 
 - [x] Implement Camera
 - [x] Implement Image Capture
 - [x] Implement Cropping & Post-processing
-- [ ] Implement OCR
+- [x] Implement OCR
 - [ ] Clean up OCR
 - [ ] Implement Automatic Vodafone & Digicel detection
 - [ ] Implement USSD
