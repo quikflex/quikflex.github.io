@@ -148,15 +148,14 @@ button {
 }
 
 #captureButton {
-    display: none;
-
     position: absolute;
     left: 50%;
     bottom: 30px;
-
     transform: translateX(-50%);
 
-    z-index: 20;
+    z-index: 100;
+
+    display: block;
 
     background: white;
     color: black;
@@ -164,8 +163,8 @@ button {
     min-width: 150px;
 }
 
-#captureButton[hidden] {
-    display: none;
+#captureButton:disabled {
+    opacity: 0.5;
 }
 
 #captureCanvas {
