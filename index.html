@@ -2,81 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#000000">
-
     <title>QuikScan</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <main class="app">
+<main class="scanner">
 
-        <!-- Camera -->
-        <section id="cameraView" class="view active">
+    <video id="camera" autoplay playsinline></video>
 
-            <video
-                id="camera"
-                autoplay
-                playsinline
-                muted
-            ></video>
+    <div class="overlay">
 
-            <div class="scanner-overlay">
+        <div class="scan-frame">
+            <div class="corner top-left"></div>
+            <div class="corner top-right"></div>
+            <div class="corner bottom-left"></div>
+            <div class="corner bottom-right"></div>
+        </div>
 
-                <div class="scan-frame">
-                    <span class="corner top-left"></span>
-                    <span class="corner top-right"></span>
-                    <span class="corner bottom-left"></span>
-                    <span class="corner bottom-right"></span>
-                </div>
+        <p class="instruction">
+            Putim Flex kod insait long bokis
+        </p>
 
-                <p class="instruction">
-                    Putim Flex kod insait long bokis
-                </p>
+    </div>
 
-            </div>
+    <div class="controls">
+        <button id="startCamera">Statim Kamera</button>
+        <button id="captureButton">📷 Kisim Piksa</button>
+    </div>
 
-            <div class="controls">
+    <canvas id="captureCanvas"></canvas>
 
-                <button id="startButton" class="button primary">
-                    📷 Statim Kamera
-                </button>
+</main>
 
-                <button id="captureButton" class="button primary hidden">
-                    📸 Kisim Piksa
-                </button>
+<script src="script.js"></script>
 
-            </div>
-
-        </section>
-
-        <!-- Preview -->
-        <section id="previewView" class="view">
-
-            <div class="preview-container">
-
-                <h1>Yu kisim dispela piksa</h1>
-
-                <img
-                    id="previewImage"
-                    alt="Piksa bilong Flex kad"
-                >
-
-                <div class="preview-actions">
-
-                    <button id="retakeButton" class="button secondary">
-                        🔄 Kisim Gen
-                    </button>
-
-                    <button id="scanButton" class="button primary">
-                        🔍 Skanim
-                    </button>
-
-                </
+</body>
+</html>
