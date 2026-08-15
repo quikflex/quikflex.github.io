@@ -1,3 +1,4 @@
+import { PaddleOCR } from "@paddleocr/paddleocr-js";
 
 
 /* =========================
@@ -150,16 +151,20 @@ captureButton.addEventListener(
                 0.95
             );
 
-        preview.classList.add(
-            "active"
-        );
+        previewImage.onload =
+            () => {
 
-        captureButton.style.display =
-            "none";
+                preview.classList.add(
+                    "active"
+                );
 
-        console.log(
-            "Piksa i kisim pinis."
-        );
+                captureButton.style.display =
+                    "none";
+
+                console.log(
+                    "Piksa i kisim pinis."
+                );
+            };
     }
 );
 
@@ -219,29 +224,33 @@ async function getPaddleOCR() {
         "PaddleOCR i load..."
     );
 
+    ocrStatus.textContent =
+        "OCR i load...";
+
+
     paddleOCR =
         await PaddleOCR.create({
 
             textDetectionModelName:
                 "PP-OCRv6_tiny_det",
 
-            textDetectionModelAsset: {
-                url:
-                    "./ocr/ppocrv6-tiny-det.tar"
-            },
-
             textRecognitionModelName:
                 "PP-OCRv6_tiny_rec",
 
-            textRecognitionModelAsset: {
-                url:
-                    "./ocr/ppocrv6-tiny-rec.tar"
-            },
+            worker: true,
 
             ortOptions: {
-                backend: "wasm"
+                backend: "wasm",
+
+                wasmPaths:
+                    "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/",
+
+                numThreads: 2,
+
+                simd: true
             }
         });
+
 
     console.log(
         "PaddleOCR i redi."
@@ -267,18 +276,13 @@ function createFrameCrop() {
         );
     }
 
+
     const imageRect =
         previewImage.getBoundingClientRect();
 
     const frameRect =
         cropArea.getBoundingClientRect();
 
-
-    /*
-     * Convert the visible frame position
-     * into coordinates in the original
-     * captured image.
-     */
 
     const scaleX =
         canvas.width /
@@ -307,10 +311,6 @@ function createFrameCrop() {
         frameRect.height *
         scaleY;
 
-
-    /*
-     * Keep the crop inside the image.
-     */
 
     sourceX =
         Math.max(
@@ -342,10 +342,6 @@ function createFrameCrop() {
             canvas.height - sourceY
         );
 
-
-    /*
-     * Create the cropped canvas.
-     */
 
     cropCanvas.width =
         Math.round(sourceWidth);
@@ -395,6 +391,7 @@ async function runOCR() {
     console.log(
         "PaddleOCR i stat."
     );
+
 
     if (
         !cropCanvas.width ||
@@ -555,11 +552,6 @@ cropButton.addEventListener(
 
         try {
 
-            /*
-             * Crop exactly what is
-             * inside the view frame.
-             */
-
             createFrameCrop();
 
 
@@ -576,10 +568,6 @@ cropButton.addEventListener(
                 "Code i crop pinis."
             );
 
-
-            /*
-             * Immediately run PaddleOCR.
-             */
 
             await runOCR();
 
