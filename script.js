@@ -623,53 +623,75 @@ backToCropButton.addEventListener(
    RAPIDOCR INITIALIZATION
    ========================= */
 
+function dumpErrorDetails(err) {
+    try {
+        console.error("---- begin error dump ----");
+        console.error("Error constructor name:", err?.constructor?.name);
+        console.error("Error name:", err?.name);
+        console.error("Error message:", err?.message);
+        console.error("Error stack:", err?.stack);
+        try {
+            console.error("JSON.stringify(err):", JSON.stringify(err));
+        } catch (e) {
+            console.error("Could not stringify err:", e);
+        }
+        const props = Object.getOwnPropertyNames(err || {}).concat(Object.keys(err || {}));
+        for (const p of [...new Set(props)]) {
+            try {
+                console.error(`err[${p}] =`, err[p]);
+            } catch (e) {
+                console.error(`err[${p}] read failed:`, e);
+            }
+        }
+        console.error("---- end error dump ----");
+    } catch (e) {
+        console.error("Failed to dump error details:", e);
+    }
+}
+
 async function initializeOCR() {
     if (rapidOCRReady) return;
 
     console.log("RapidOCR i load...");
     ocrStatus.textContent = "RapidOCR i load...";
 
-    function dumpErrorDetails(err) {
-        try {
-            console.error("---- begin error dump ----");
-            console.error("Error constructor name:", err?.constructor?.name);
-            console.error("Error name:", err?.name);
-            console.error("Error message:", err?.message);
-            console.error("Error stack:", err?.stack);
-            try {
-                console.error("JSON.stringify(err):", JSON.stringify(err));
-            } catch (e) {
-                console.error("Could not stringify err:", e);
-            }
-            const props = Object.getOwnPropertyNames(err || {}).concat(Object.keys(err || {}));
-            for (const p of [...new Set(props)]) {
-                try {
-                    console.error(`err[${p}] =`, err[p]);
-                } catch (e) {
-                    console.error(`err[${p}] read failed:`, e);
-                }
-            }
-            console.error("---- end error dump ----");
-        } catch (e) {
-            console.error("Failed to dump error details:", e);
-        }
-    }
-
     try {
         if (typeof window.createRapidOCREngine !== "function") {
-            // Use dynamic import which works without injecting inline module scripts
-            const url = "https://unpkg.com/client-side-ocr@2.1.0/dist/index.mjs";
-            try {
-                const module = await Promise.race([
-                    import(url),
-                    new Promise((_, reject) =>
-                        setTimeout(() => reject(new Error("Module import timed out after 30s")), 30000)
-                    )
-                ]);
-                if (!module || typeof module.createRapidOCREngine !== "function") {
-                    throw new Error("Module loaded but createRapidOCREngine export missing");
+            // Try multiple CDNs (prefer jsDelivr which usually provides CORS headers for modules)
+            async function loadRapidOCRModule() {
+                const candidates = [
+                    "https://cdn.jsdelivr.net/npm/client-side-ocr@2.1.0/dist/index.mjs",
+                    "https://unpkg.com/client-side-ocr@2.1.0/dist/index.mjs"
+                ];
+
+                const timeoutMs = 30000;
+
+                for (const url of candidates) {
+                    try {
+                        const module = await Promise.race([
+                            import(url),
+                            new Promise((_, reject) =>
+                                setTimeout(() => reject(new Error(`Module import timed out after ${timeoutMs}ms: ${url}`)), timeoutMs)
+                            )
+                        ]);
+
+                        if (module && typeof module.createRapidOCREngine === "function") {
+                            return module.createRapidOCREngine;
+                        } else {
+                            console.warn(`Module loaded from ${url} but did not export createRapidOCREngine`);
+                        }
+                    } catch (err) {
+                        console.warn(`Import from ${url} failed:`, err);
+                        // try next candidate
+                    }
                 }
-                window.createRapidOCREngine = module.createRapidOCREngine;
+
+                throw new Error("All RapidOCR module import attempts failed (CORS/network). Consider vendoring the library or hosting it same-origin.");
+            }
+
+            try {
+                const createFn = await loadRapidOCRModule();
+                window.createRapidOCREngine = createFn;
             } catch (impErr) {
                 dumpErrorDetails(impErr);
                 throw new Error("RapidOCR module import failed: " + (impErr?.message || String(impErr)));
