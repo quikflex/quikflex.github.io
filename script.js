@@ -1,4 +1,3 @@
-import { PaddleOCR } from "@paddleocr/paddleocr-js";
 
 
 /* =========================
