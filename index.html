@@ -124,7 +124,13 @@
     <canvas id="cropCanvas"></canvas>
 
 </main>
-<script src="https://cdn.jsdelivr.net/gh/antimatter15/ocrad.js@master/ocrad.js"></script>
+<script type="module">
+    import { createRapidOCREngine } from
+        "https://unpkg.com/client-side-ocr@2.1.0/dist/index.mjs";
+
+    window.createRapidOCREngine = createRapidOCREngine;
+</script>
+
 <script src="script.js"></script>
 
 </body>
