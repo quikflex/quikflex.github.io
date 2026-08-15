@@ -1,3 +1,5 @@
+import { RapidOCREngine } from "https://cdn.jsdelivr.net/npm/client-side-ocr@2.1.0/+esm";
+
 console.log("QUIKSCAN SCRIPT STARTED");
 const video = document.getElementById("camera");
 
@@ -50,6 +52,10 @@ const ocrResult =
 
 const confirmButton =
     document.getElementById("confirmButton");
+
+let rapidOCR = null;
+
+let rapidOCRReady = false;
 
 let cameraStream = null;
 
@@ -618,10 +624,53 @@ backToCropButton.addEventListener(
 /* =========================
    OCR - OCRAD
    ========================= */
+async function initializeOCR() {
 
-ocrButton.addEventListener("click", () => {
+    if (rapidOCRReady) {
+        return;
+    }
 
-    console.log("OCRAD i stat.");
+    console.log("RapidOCR i load...");
+
+    ocrStatus.textContent =
+        "OCR i load...";
+
+    try {
+
+        rapidOCR =
+            new RapidOCREngine({
+                lang: "en"
+            });
+
+        await rapidOCR.initialize();
+
+        rapidOCRReady = true;
+
+        console.log(
+            "RapidOCR i redi."
+        );
+
+        ocrStatus.textContent =
+            "OCR i redi.";
+
+    } catch (error) {
+
+        console.error(
+            "RapidOCR initialization error:",
+            error
+        );
+
+        ocrStatus.textContent =
+            "OCR i no inap load: " +
+            (error?.message || String(error));
+
+        throw error;
+    }
+}
+
+ocrButton.addEventListener("click", async () => {
+
+    console.log("RapidOCR i stat.");
 
     if (!cropCanvas.width || !cropCanvas.height) {
 
@@ -629,19 +678,6 @@ ocrButton.addEventListener("click", () => {
             "OCR i no inap stat: crop image i no stap.";
 
         console.error(message);
-
-        ocrStatus.textContent = message;
-
-        return;
-    }
-
-    if (typeof OCRAD !== "function") {
-
-        const message =
-            "OCRAD i no load. Plis checkim OCRAD script.";
-
-        console.error(message);
-
         ocrStatus.textContent = message;
 
         return;
@@ -650,85 +686,135 @@ ocrButton.addEventListener("click", () => {
     ocrButton.disabled = true;
 
     ocrStatus.textContent =
-        "OCR i wok...";
+        "RapidOCR i wok...";
 
     ocrResult.value = "";
 
     console.log(
-        "OCRAD input:",
+        "OCR input:",
         `${cropCanvas.width} × ${cropCanvas.height}px`
     );
 
+    const started =
+        performance.now();
+
     try {
 
-        OCRAD(
-            cropCanvas,
-            {
-                numeric: true
-            },
-            function (result) {
+        await initializeOCR();
 
-                console.log(
-                    "OCRAD raw result:",
-                    JSON.stringify(result)
-                );
+        console.log(
+            "RapidOCR inference i stat..."
+        );
 
-                const text =
-                    String(result || "")
-                        .replace(/\D/g, "");
+        const result =
+            await rapidOCR.process(
+                cropCanvas
+            );
 
-                console.log(
-                    "OCRAD cleaned result:",
-                    JSON.stringify(text)
-                );
+        const elapsed =
+            Math.round(
+                performance.now() - started
+            );
 
-                if (!text) {
+        console.log(
+            "RapidOCR result:",
+            result
+        );
 
-                    console.warn(
-                        "OCRAD i no painim wanpela digit."
-                    );
+        console.log(
+            `RapidOCR elapsed: ${elapsed}ms`
+        );
 
-                    ocrStatus.textContent =
-                        "OCR i no painim wanpela namba. Plis checkim crop na piksa.";
+        /*
+         * Collect text returned by RapidOCR.
+         */
 
-                    ocrButton.disabled = false;
+        let rawText = "";
 
-                    return;
-                }
+        if (Array.isArray(result)) {
 
-                ocrResult.value =
-                    text;
+            rawText =
+                result
+                    .map(item =>
+                        item.text || ""
+                    )
+                    .join(" ");
 
-                ocrStatus.textContent =
-                    `OCR i painim ${text.length} digit. Plis checkim code na stretim sapos em rong.`;
+        } else if (result?.text) {
 
-                console.log(
-                    `OCRAD i painim ${text.length} digit:`,
-                    text
-                );
+            rawText =
+                result.text;
 
-                ocrButton.disabled = false;
-            }
+        }
+
+        console.log(
+            "RapidOCR raw text:",
+            JSON.stringify(rawText)
+        );
+
+        /*
+         * Flex codes are numbers.
+         */
+
+        const digits =
+            rawText.replace(
+                /\D/g,
+                ""
+            );
+
+        console.log(
+            "RapidOCR cleaned:",
+            JSON.stringify(digits)
+        );
+
+        if (!digits) {
+
+            ocrStatus.textContent =
+                `RapidOCR i pinis (${elapsed}ms) tasol em i no painim wanpela namba.`;
+
+            console.warn(
+                "RapidOCR completed with zero digits."
+            );
+
+            return;
+        }
+
+        ocrResult.value =
+            digits;
+
+        ocrStatus.textContent =
+            `RapidOCR i painim ${digits.length} digit. Plis checkim code.`;
+
+        console.log(
+            `RapidOCR i painim ${digits.length} digit:`,
+            digits
         );
 
     } catch (error) {
 
         console.error(
-            "OCRAD error:",
+            "RapidOCR error:",
             error
         );
 
         console.error(
-            "OCRAD error string:",
+            "RapidOCR error string:",
             String(error)
         );
 
         ocrStatus.textContent =
-            `OCR i fail: ${error?.message || String(error)}`;
+            `RapidOCR i fail: ${error?.message || String(error)}`;
+
+    } finally {
 
         ocrButton.disabled = false;
+
+        console.log(
+            "RapidOCR process i pinis."
+        );
     }
 });
+
 /* =========================
    CONFIRM OCR
    ========================= */
