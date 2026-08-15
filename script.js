@@ -3,49 +3,36 @@ const startButton = document.getElementById("startCamera");
 const captureButton = document.getElementById("captureButton");
 const canvas = document.getElementById("captureCanvas");
 
-let cameraStream = null;
-
-console.log("QuikScan JS loaded");
+console.log("QuikScan JavaScript i load pinis.");
 
 startButton.addEventListener("click", async () => {
-
-    console.log("Start camera button pressed");
+    console.log("Camera button i press.");
 
     try {
-
-        cameraStream = await navigator.mediaDevices.getUserMedia({
+        const stream = await navigator.mediaDevices.getUserMedia({
             video: {
                 facingMode: "environment"
             },
             audio: false
         });
 
-        console.log("Camera permission granted");
-
-        video.srcObject = cameraStream;
+        video.srcObject = stream;
 
         startButton.style.display = "none";
-        captureButton.style.display = "block";
+        captureButton.disabled = false;
 
-        console.log("Capture button shown");
-
+        console.log("Kamera i wok.");
     } catch (error) {
-
         console.error("Camera error:", error);
 
-        alert(
-            "Kamera i no inap.\n\n" +
-            "Plis checkim camera permission."
-        );
+        alert("Kamera i no inap. Plis checkim permission.");
     }
 });
 
-
 captureButton.addEventListener("click", () => {
+    console.log("Capture button i press.");
 
-    console.log("Capture button pressed");
-
-    if (!video.videoWidth || !video.videoHeight) {
+    if (!video.videoWidth) {
         alert("Kamera i no redi yet.");
         return;
     }
@@ -63,25 +50,11 @@ captureButton.addEventListener("click", () => {
         canvas.height
     );
 
-    console.log(
-        `Piksa i kisim: ${canvas.width} × ${canvas.height}`
-    );
+    console.log("Piksa i kisim pinis.");
 
-    /*
-     * Temporary test:
-     * open the captured image in a new tab.
-     *
-     * OCR will replace this later.
-     */
+    captureButton.textContent = "✓ Kisim pinis";
 
-    const image = canvas.toDataURL("image/jpeg", 0.95);
-
-    const newWindow = window.open();
-
-    if (newWindow) {
-        newWindow.document.write(
-            `<img src="${image}" style="max-width:100%;">`
-        );
-    }
-
+    setTimeout(() => {
+        captureButton.textContent = "📷 Skanim";
+    }, 1000);
 });
