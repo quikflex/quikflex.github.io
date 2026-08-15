@@ -4,7 +4,17 @@
 
 QuikScan - OCR flex kad skana blo yumi
 
-WIP. Check back later
+WIP. Currently incomplete
 
 QuikScan uses OCR (Optical Character Recognition) to easily scan flex cards and top up in an instant!
 
+## QuikScan Roadmap
+
+- [x] Implement Camera
+- [x] Implement Image Capture
+- [x] Implement Cropping & Post-processing
+- [ ] Implement OCR
+- [ ] Clean up OCR
+- [ ] Implement Automatic Vodafone & Digicel detection
+- [ ] Implement USSD
+- [ ] Make app prettier
