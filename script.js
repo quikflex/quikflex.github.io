@@ -3,46 +3,36 @@ const startButton = document.getElementById("startCamera");
 const captureButton = document.getElementById("captureButton");
 const canvas = document.getElementById("captureCanvas");
 
-let stream = null;
+console.log("QuikScan JavaScript i load pinis.");
 
 startButton.addEventListener("click", async () => {
-    console.log("Start camera button pressed");
+    console.log("Camera button i press.");
 
     try {
-        stream = await navigator.mediaDevices.getUserMedia({
+        const stream = await navigator.mediaDevices.getUserMedia({
             video: {
                 facingMode: "environment"
             },
             audio: false
         });
 
-        console.log("Camera permission granted");
-
         video.srcObject = stream;
 
-        /*
-         * Do NOT wait for video.play().
-         * The Capture button should appear regardless.
-         */
         startButton.style.display = "none";
-        captureButton.style.display = "block";
+        captureButton.disabled = false;
 
-        console.log("Capture button enabled");
-
+        console.log("Kamera i wok.");
     } catch (error) {
         console.error("Camera error:", error);
 
-        alert(
-            "Kamera i no inap.\n\n" +
-            "Plis checkim camera permission."
-        );
+        alert("Kamera i no inap. Plis checkim permission.");
     }
 });
 
 captureButton.addEventListener("click", () => {
-    console.log("Capture button pressed");
+    console.log("Capture button i press.");
 
-    if (!video.videoWidth || !video.videoHeight) {
+    if (!video.videoWidth) {
         alert("Kamera i no redi yet.");
         return;
     }
@@ -60,9 +50,7 @@ captureButton.addEventListener("click", () => {
         canvas.height
     );
 
-    console.log(
-        `Image i kisim: ${canvas.width} × ${canvas.height}`
-    );
+    console.log("Piksa i kisim pinis.");
 
     captureButton.textContent = "✓ Kisim pinis";
 
