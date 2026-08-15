@@ -733,13 +733,6 @@ async function initializeOCR() {
    OCR - TESSERACT
    ========================= */
 
-/*
- * Upscale the cropped image before OCR.
- *
- * Tesseract performs much better when small digits
- * have more pixels to work with.
- */
-
 function upscaleCanvas(sourceCanvas, scale = 3) {
 
     const canvas =
@@ -753,10 +746,6 @@ function upscaleCanvas(sourceCanvas, scale = 3) {
 
     const context =
         canvas.getContext("2d");
-
-    /*
-     * Keep the original pixels sharp.
-     */
 
     context.imageSmoothingEnabled = false;
 
@@ -790,6 +779,25 @@ ocrButton.addEventListener(
             return;
         }
 
+        /*
+         * Make sure Tesseract actually exists.
+         */
+
+        if (
+            typeof Tesseract ===
+            "undefined"
+        ) {
+
+            console.error(
+                "Tesseract object i no stap."
+            );
+
+            ocrStatus.textContent =
+                "Tesseract i no load.";
+
+            return;
+        }
+
         ocrButton.disabled = true;
 
         ocrStatus.textContent =
@@ -797,35 +805,49 @@ ocrButton.addEventListener(
 
         ocrResult.value = "";
 
-        console.log(
-            "Original OCR input:",
-            `${cropCanvas.width} × ${cropCanvas.height}px`
-        );
-
         try {
 
             /*
-             * Upscale the image 3×.
+             * 3× upscale.
              */
 
-            const ocrImage =
+            const ocrCanvas =
                 upscaleCanvas(
                     cropCanvas,
                     3
                 );
 
             console.log(
-                "Upscaled OCR input:",
-                `${ocrImage.width} × ${ocrImage.height}px`
+                "OCR image:",
+                `${ocrCanvas.width} × ${ocrCanvas.height}px`
             );
 
+
             /*
-             * Send the enlarged image to Tesseract.
+             * Convert the canvas to a JPEG data URL.
+             *
+             * This avoids relying on Tesseract's
+             * Canvas/ImageLike handling on WebKit.
+             */
+
+            const imageData =
+                ocrCanvas.toDataURL(
+                    "image/jpeg",
+                    0.95
+                );
+
+            console.log(
+                "OCR image converted to data URL."
+            );
+
+
+            /*
+             * Run Tesseract.
              */
 
             const result =
                 await Tesseract.recognize(
-                    ocrImage,
+                    imageData,
                     "eng",
                     {
                         logger: message => {
@@ -842,7 +864,8 @@ ocrButton.addEventListener(
 
                                 const percent =
                                     Math.round(
-                                        message.progress * 100
+                                        message.progress *
+                                        100
                                     );
 
                                 ocrStatus.textContent =
@@ -853,23 +876,23 @@ ocrButton.addEventListener(
                 );
 
 
-            /*
-             * Get the raw OCR result.
-             */
+            console.log(
+                "Tesseract result:",
+                result
+            );
+
 
             const rawText =
-                result.data.text;
+                result?.data?.text || "";
 
             console.log(
                 "OCR raw result:",
-                rawText
+                JSON.stringify(rawText)
             );
 
 
             /*
-             * Flex codes are numbers.
-             *
-             * Remove everything except digits.
+             * Keep numbers only.
              */
 
             const text =
@@ -880,7 +903,7 @@ ocrButton.addEventListener(
 
             console.log(
                 "Cleaned OCR result:",
-                text
+                JSON.stringify(text)
             );
 
 
@@ -889,18 +912,9 @@ ocrButton.addEventListener(
                 ocrStatus.textContent =
                     "OCR i no painim code.";
 
-                console.warn(
-                    "OCR completed but found no digits."
-                );
-
                 return;
             }
 
-
-            /*
-             * Put the cleaned number into
-             * the result field.
-             */
 
             ocrResult.value =
                 text;
@@ -920,12 +934,23 @@ ocrButton.addEventListener(
                 error
             );
 
-            ocrStatus.textContent =
-                "OCR i gat problem.";
-
-            alert(
-                "OCR i no inap wok."
+            console.error(
+                "OCR error name:",
+                error?.name
             );
+
+            console.error(
+                "OCR error message:",
+                error?.message
+            );
+
+            console.error(
+                "OCR error stack:",
+                error?.stack
+            );
+
+            ocrStatus.textContent =
+                "OCR i no inap wok.";
 
         } finally {
 
