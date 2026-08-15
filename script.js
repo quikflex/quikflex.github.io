@@ -621,52 +621,12 @@ ocrButton.addEventListener("click", async () => {
 
     console.log("OCR i stat.");
 
-    if (!cropCanvas.width || !cropCanvas.height) {
+    cropCanvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+    });
 
-        alert(
-            "No gat crop image."
-        );
-
-        return;
-    }
-
-    ocrButton.disabled = true;
-
-    ocrStatus.textContent =
-        "OCR i wok...";
-
-    ocrResult.value = "";
-
-    try {
-
-        const result =
-            await Tesseract.recognize(
-                cropCanvas,
-                "eng",
-                {
-                    logger: message => {
-
-                        console.log(
-                            "OCR:",
-                            message
-                        );
-
-                        if (
-                            message.status ===
-                            "recognizing text"
-                        ) {
-
-                            const percent =
-                                Math.round(
-                                    message.progress * 100
-                                );
-
-                            ocrStatus.textContent =
-                                `OCR i wok... ${percent}%`;
-                        }
-                    }
-                }
-            );
+});
 
 
         /*
