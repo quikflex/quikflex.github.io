@@ -1,9 +1,9 @@
+console.log("QUIKSCAN SCRIPT STARTED");
+
 import { createRapidOCREngine } from
     "https://unpkg.com/client-side-ocr@2.1.0/dist/index.mjs";
 
-
-console.log("QUIKSCAN SCRIPT STARTED");
-
+console.log("RAPIDOCR MODULE LOADED");
 
 const video =
     document.getElementById("camera");
