@@ -7,25 +7,39 @@
     <title>QuikScan</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <main class="scanner">
-        <video id="camera" autoplay playsinline></video>
+<main class="scanner">
 
-        <div class="overlay">
-            <div class="scan-frame">
-                <div class="corner top-left"></div>
-                <div class="corner top-right"></div>
-                <div class="corner bottom-left"></div>
-                <div class="corner bottom-right"></div>
-            </div>
+    <video id="camera" autoplay playsinline></video>
 
-            <p class="instruction">Place the Flex code inside the frame</p>
+    <div class="overlay">
+
+        <div class="scan-frame">
+            <div class="corner top-left"></div>
+            <div class="corner top-right"></div>
+            <div class="corner bottom-left"></div>
+            <div class="corner bottom-right"></div>
         </div>
 
-        <button id="startCamera">Start Camera</button>
-    </main>
+        <p class="instruction">
+            Place the Flex code inside the frame
+        </p>
 
-    <script src="script.js"></script>
+    </div>
+
+    <button id="captureButton" disabled>Capture</button>
+
+    <button id="startCamera">
+        Start Camera
+    </button>
+
+    <canvas id="captureCanvas"></canvas>
+
+</main>
+
+<script src="script.js"></script>
+
 </body>
 </html>
