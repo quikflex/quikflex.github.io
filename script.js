@@ -39,9 +39,6 @@ const croppedImage =
 const backToCropButton =
     document.getElementById("backToCropButton");
 
-const ocrButton =
-    document.getElementById("ocrButton");
-
 const ocrStatus =
     document.getElementById("ocrStatus");
 
@@ -52,12 +49,6 @@ const confirmButton =
     document.getElementById("confirmButton");
 
 
-/* =========================
-   RAPIDOCR
-   ========================= */
-
-let rapidOCR = null;
-let rapidOCRReady = false;
 
 
 /* =========================
@@ -595,6 +586,7 @@ cropButton.addEventListener("click", () => {
     );
 });
 
+runOCR();
 
 /* =========================
    CROP AGAIN
@@ -653,9 +645,7 @@ function upscaleCanvas(sourceCanvas, scale = 3) {
 }
 
 
-ocrButton.addEventListener(
-    "click",
-    async () => {
+async function runOCR() {
 
         console.log("OCR i stat.");
 
@@ -849,7 +839,7 @@ ocrButton.addEventListener(
             ocrButton.disabled = false;
         }
     }
-);
+
 
 
 /* =========================
