@@ -1,60 +1,162 @@
-const video = document.getElementById("camera");
-const startButton = document.getElementById("startCamera");
+const cameraView = document.getElementById("cameraView");
+const previewView = document.getElementById("previewView");
+
+const camera = document.getElementById("camera");
+
+const startButton = document.getElementById("startButton");
 const captureButton = document.getElementById("captureButton");
+
+const retakeButton = document.getElementById("retakeButton");
+const scanButton = document.getElementById("scanButton");
+
 const canvas = document.getElementById("captureCanvas");
+const previewImage = document.getElementById("previewImage");
 
-console.log("QuikScan JavaScript i load pinis.");
+let cameraStream = null;
 
-startButton.addEventListener("click", async () => {
-    console.log("Camera button i press.");
 
+/* =========================
+   Camera
+   ========================= */
+
+async function startCamera() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        cameraStream = await navigator.mediaDevices.getUserMedia({
             video: {
-                facingMode: "environment"
+                facingMode: {
+                    ideal: "environment"
+                }
             },
+
             audio: false
         });
 
-        video.srcObject = stream;
+        camera.srcObject = cameraStream;
 
-        startButton.style.display = "none";
-        captureButton.disabled = false;
+        await camera.play();
 
-        console.log("Kamera i wok.");
+        startButton.classList.add("hidden");
+        captureButton.classList.remove("hidden");
+
+        console.log("Kamera i stat.");
+
     } catch (error) {
+
         console.error("Camera error:", error);
 
-        alert("Kamera i no inap. Plis checkim permission.");
+        alert(
+            "Kamera i no inap.\n\n" +
+            "Plis givim QuikScan permission long yusim kamera."
+        );
     }
-});
+}
 
-captureButton.addEventListener("click", () => {
-    console.log("Capture button i press.");
 
-    if (!video.videoWidth) {
+/* =========================
+   Capture
+   ========================= */
+
+function captureImage() {
+
+    if (
+        !camera.videoWidth ||
+        !camera.videoHeight
+    ) {
         alert("Kamera i no redi yet.");
         return;
     }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    /*
+     * Capture the current camera frame.
+     */
+
+    canvas.width = camera.videoWidth;
+    canvas.height = camera.videoHeight;
 
     const context = canvas.getContext("2d");
 
     context.drawImage(
-        video,
+        camera,
         0,
         0,
         canvas.width,
         canvas.height
     );
 
-    console.log("Piksa i kisim pinis.");
+    /*
+     * Convert the canvas into an image.
+     */
 
-    captureButton.textContent = "✓ Kisim pinis";
+    const image = canvas.toDataURL(
+        "image/jpeg",
+        0.95
+    );
 
-    setTimeout(() => {
-        captureButton.textContent = "📷 Skanim";
-    }, 1000);
-});
+    previewImage.src = image;
+
+    /*
+     * Switch from camera to preview.
+     */
+
+    cameraView.classList.remove("active");
+    previewView.classList.add("active");
+
+    console.log(
+        `Piksa i kisim: ${canvas.width} × ${canvas.height}`
+    );
+}
+
+
+/* =========================
+   Retake
+   ========================= */
+
+function retakeImage() {
+
+    previewImage.src = "";
+
+    previewView.classList.remove("active");
+    cameraView.classList.add("active");
+
+}
+
+
+/* =========================
+   OCR placeholder
+   ========================= */
+
+function scanImage() {
+
+    /*
+     * OCR will be added here.
+     */
+
+    alert(
+        "OCR bai kam long hia. 🔍"
+    );
+}
+
+
+/* =========================
+   Events
+   ========================= */
+
+startButton.addEventListener(
+    "click",
+    startCamera
+);
+
+captureButton.addEventListener(
+    "click",
+    captureImage
+);
+
+retakeButton.addEventListener(
+    "click",
+    retakeImage
+);
+
+scanButton.addEventListener(
+    "click",
+    scanImage
+);
