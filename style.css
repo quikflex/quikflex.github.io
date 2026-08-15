@@ -1,465 +1,136 @@
+/* Modernized UI for QuikScan
+   - Dark gradient background
+   - Larger, elevated buttons with icons
+   - Improved preview/cropped layouts
+   - OCR status badge with spinner + progress bar
+   - Softer crop selection & handles
+*/
+
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
-html,
-body {
-    margin: 0;
-    padding: 0;
-
-    width: 100%;
-    height: 100%;
-
-    background: #000;
-    color: #fff;
-
-    font-family: Arial, sans-serif;
-
-    overflow: hidden;
+:root{
+  --bg-1:#06070a;
+  --bg-2:#0f1720;
+  --panel: rgba(255,255,255,0.04);
+  --accent:#00d1b2; /* teal */
+  --muted: rgba(255,255,255,0.65);
+  --glass: rgba(255,255,255,0.04);
 }
 
-.scanner {
-    position: relative;
-
-    width: 100%;
-    height: 100%;
+html,body{
+  height:100%;
+  margin:0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg,var(--bg-1),var(--bg-2) 60%);
+  color:#e6eef1;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 
-
-/* =========================
-   CAMERA
-   ========================= */
-
-#camera {
-    position: absolute;
-
-    inset: 0;
-
-    width: 100%;
-    height: 100%;
-
-    object-fit: cover;
-
-    background: #000;
+.scanner{
+  position:relative;
+  width:100%;
+  height:100%;
+  overflow:hidden;
 }
 
-.overlay {
-    position: absolute;
-
-    inset: 0;
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
-
-    pointer-events: none;
+/* camera */
+#camera{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter: saturate(0.95) contrast(1.02) brightness(0.95);
+  background: #000;
 }
 
-.scan-frame {
-    position: relative;
-
-    width: 85%;
-    max-width: 500px;
-
-    height: 120px;
+.overlay{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;
 }
 
-.corner {
-    position: absolute;
-
-    width: 32px;
-    height: 32px;
-
-    border: 4px solid white;
+.scan-frame{
+  width:86%; max-width:520px; height:130px; position:relative; border-radius:14px; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
 }
 
-.top-left {
-    top: 0;
-    left: 0;
+.corner{ width:36px; height:36px; border:3px solid rgba(255,255,255,0.9); }
+.top-left{ top:0; left:0; border-right:none; border-bottom:none; }
+.top-right{ top:0; right:0; border-left:none; border-bottom:none; }
+.bottom-left{ bottom:0; left:0; border-right:none; border-top:none; }
+.bottom-right{ bottom:0; right:0; border-left:none; border-top:none; }
 
-    border-right: none;
-    border-bottom: none;
+.instruction{
+  position:absolute; bottom:18%; margin:0; padding:10px 16px; background:linear-gradient(180deg, rgba(0,0,0,0.5), rgba(0,0,0,0.6)); border-radius:12px; font-size:15px; color:var(--muted); text-align:center; pointer-events:none; backdrop-filter: blur(6px);
 }
 
-.top-right {
-    top: 0;
-    right: 0;
-
-    border-left: none;
-    border-bottom: none;
+/* buttons (kept centered) */
+button{
+  position:absolute; left:50%; transform:translateX(-50%); z-index:40; border:0; cursor:pointer; outline:none;
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
 }
 
-.bottom-left {
-    bottom: 0;
-    left: 0;
+button:active{ transform: translateX(-50%) scale(.98); }
 
-    border-right: none;
-    border-top: none;
+#startCamera{
+  bottom:28px; padding:14px 26px; border-radius:999px; background:rgba(255,255,255,0.95); color:#071017; font-weight:700; box-shadow: 0 8px 20px rgba(2,6,23,0.6);
 }
 
-.bottom-right {
-    bottom: 0;
-    right: 0;
-
-    border-left: none;
-    border-top: none;
+#captureButton{
+  bottom:28px; z-index:60; background:var(--accent); color:#022; min-width:64px; height:64px; width:64px; padding:0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow: 0 12px 30px rgba(0,0,0,0.6);
 }
 
-.instruction {
-    position: absolute;
+#captureButton:disabled{ opacity:.55; filter:grayscale(.3); }
 
-    bottom: 20%;
+/* preview overlay */
+.preview{ position:absolute; inset:0; z-index:200; display:none; flex-direction:column; align-items:center; justify-content:flex-start; gap:14px; padding:22px; background: linear-gradient(180deg, rgba(3,6,14,0.85), rgba(6,10,18,0.96)); }
+.preview.active{ display:flex; }
+.cropInstruction{ margin:12px 0 0; font-size:16px; font-weight:700; color:#dffaf3; }
 
-    margin: 0;
-
-    padding: 10px 16px;
-
-    background: rgba(0, 0, 0, 0.7);
-
-    border-radius: 12px;
-
-    font-size: 15px;
-
-    text-align: center;
+.crop-area{ position:relative; width:100%; max-width:820px; max-height:68vh; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:12px; background:var(--glass); padding:12px; box-shadow: 0 6px 22px rgba(0,0,0,0.6);
 }
 
+#previewImage{ width:100%; max-height:66vh; object-fit:contain; border-radius:8px; user-select:none; -webkit-user-drag:none; }
 
-/* =========================
-   BUTTONS
-   ========================= */
+/* crop selection refined */
+.crop-selection{ position:absolute; left:20%; top:35%; width:60%; height:25%; border-radius:10px; border:2px dashed rgba(255,255,255,0.9); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); box-shadow: 0 10px 30px rgba(2,6,23,0.6), inset 0 0 0 9999px rgba(0,0,0,0.35); cursor:move; }
 
-button {
-    position: absolute;
+.crop-handle{ width:18px; height:18px; border-radius:50%; background:var(--accent); box-shadow:0 6px 14px rgba(0,0,0,0.5); border:3px solid rgba(255,255,255,0.95); position:absolute; }
+.crop-handle.top-left{ top:-9px; left:-9px; }
+.crop-handle.top-right{ top:-9px; right:-9px; }
+.crop-handle.bottom-left{ bottom:-9px; left:-9px; }
+.crop-handle.bottom-right{ bottom:-9px; right:-9px; }
 
-    left: 50%;
+.cropButtons{ display:flex; gap:12px; width:100%; justify-content:center; margin-top:6px; }
+.cropButtons button{ position:static; transform:none; padding:10px 18px; border-radius:12px; background:#fff; color:#071017; font-weight:700; box-shadow:0 8px 20px rgba(1,6,20,0.4); }
 
-    transform: translateX(-50%);
+/* cropped result */
+.cropped-preview{ position:absolute; inset:0; z-index:300; display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; background: linear-gradient(180deg, rgba(2,6,12,0.9), rgba(6,10,18,0.98)); }
+.cropped-preview.active{ display:flex; }
+.cropped-preview p{ margin:0; font-size:17px; font-weight:700; color:#dffaf3; }
 
-    z-index: 20;
+#croppedImage{ width:100%; max-width:720px; max-height:60vh; object-fit:contain; border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,0.6); }
 
-    border: none;
+.cropped-preview button{ position:static; transform:none; padding:10px 16px; border-radius:12px; background:#fff; color:#071017; font-weight:700; box-shadow:0 8px 20px rgba(1,6,20,0.4); }
 
-    border-radius: 999px;
+/* hidden canvases remain hidden */
+#captureCanvas, #cropCanvas{ display:none; }
 
-    padding: 15px 30px;
+/* OCR area improvements */
+#ocrStatus{ margin:0; min-height:24px; font-size:15px; text-align:center; color:#d6fff0; display:flex; align-items:center; gap:10px; }
 
-    font-size: 16px;
+/* status badge + spinner */
+.status-badge{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; background:rgba(0,0,0,0.45); border-radius:999px; box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
 
-    font-weight: bold;
+@keyframes spin{ from{ transform:rotate(0deg);} to{ transform:rotate(360deg);} }
+.spinner{ width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,0.12); border-top-color:var(--accent); animation:spin 1s linear infinite; }
 
-    cursor: pointer;
-}
+/* progress bar under status */
+.ocr-progress{ width:220px; height:6px; background:rgba(255,255,255,0.07); border-radius:6px; overflow:hidden; box-shadow: inset 0 -1px 0 rgba(0,0,0,0.4); }
+.ocr-progress > i{ display:block; height:100%; width:0%; background: linear-gradient(90deg, var(--accent), #57f6d7); transition: width .18s linear; }
 
-#startCamera {
-    bottom: 30px;
+#ocrResult{ width:88%; max-width:520px; padding:14px; border-radius:12px; border:2px solid rgba(255,255,255,0.09); background: linear-gradient(180deg,#071017, #0b1a21); color:#dffaf3; font-size:20px; text-align:center; outline:none; box-shadow: inset 0 2px 8px rgba(0,0,0,0.6); }
+#ocrResult:focus{ box-shadow:0 10px 30px rgba(0,0,0,0.6); border-color: rgba(255,255,255,0.18); }
 
-    background: white;
-    color: black;
-}
-
-#captureButton {
-    bottom: 30px;
-
-    background: white;
-    color: black;
-
-    min-width: 150px;
-
-    z-index: 100;
-}
-
-#captureButton:disabled {
-    opacity: 0.5;
-}
-
-
-/* =========================
-   PREVIEW
-   ========================= */
-
-.preview {
-    position: absolute;
-
-    inset: 0;
-
-    z-index: 200;
-
-    display: none;
-
-    flex-direction: column;
-
-    align-items: center;
-    justify-content: center;
-
-    gap: 12px;
-
-    padding: 20px;
-
-    background: #000;
-}
-
-.preview.active {
-    display: flex;
-}
-
-.cropInstruction {
-    margin: 0;
-
-    font-size: 17px;
-
-    font-weight: bold;
-}
-
-
-/* =========================
-   CROP AREA
-   ========================= */
-
-.crop-area {
-    position: relative;
-
-    width: 100%;
-    max-width: 700px;
-
-    max-height: 65vh;
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
-
-    overflow: hidden;
-
-    touch-action: none;
-}
-
-#previewImage {
-    display: block;
-
-    width: 100%;
-    max-height: 65vh;
-
-    object-fit: contain;
-
-    border-radius: 8px;
-
-    user-select: none;
-    -webkit-user-drag: none;
-}
-
-
-/* =========================
-   CROP SELECTION
-   ========================= */
-
-.crop-selection {
-    position: absolute;
-
-    left: 20%;
-    top: 35%;
-
-    width: 60%;
-    height: 25%;
-
-    border: 2px solid white;
-
-    background: rgba(255, 255, 255, 0.08);
-
-    box-shadow:
-        0 0 0 9999px rgba(0, 0, 0, 0.45);
-
-    touch-action: none;
-
-    cursor: move;
-}
-
-.crop-handle {
-    position: absolute;
-
-    width: 22px;
-    height: 22px;
-
-    border: 4px solid white;
-
-    background: transparent;
-
-    touch-action: none;
-}
-
-.crop-handle.top-left {
-    top: -3px;
-    left: -3px;
-
-    border-right: none;
-    border-bottom: none;
-}
-
-.crop-handle.top-right {
-    top: -3px;
-    right: -3px;
-
-    border-left: none;
-    border-bottom: none;
-}
-
-.crop-handle.bottom-left {
-    bottom: -3px;
-    left: -3px;
-
-    border-right: none;
-    border-top: none;
-}
-
-.crop-handle.bottom-right {
-    bottom: -3px;
-    right: -3px;
-
-    border-left: none;
-    border-top: none;
-}
-
-
-/* =========================
-   CROP BUTTONS
-   ========================= */
-
-.cropButtons {
-    display: flex;
-
-    justify-content: center;
-
-    gap: 12px;
-
-    width: 100%;
-}
-
-.cropButtons button {
-    position: static;
-
-    transform: none;
-
-    background: white;
-
-    color: black;
-}
-
-
-/* =========================
-   CROPPED RESULT
-   ========================= */
-
-.cropped-preview {
-    position: absolute;
-
-    inset: 0;
-
-    z-index: 300;
-
-    display: none;
-
-    flex-direction: column;
-
-    justify-content: center;
-    align-items: center;
-
-    gap: 20px;
-
-    padding: 20px;
-
-    background: #000;
-}
-
-.cropped-preview.active {
-    display: flex;
-}
-
-.cropped-preview p {
-    margin: 0;
-
-    font-size: 18px;
-
-    font-weight: bold;
-}
-
-#croppedImage {
-    width: 100%;
-    max-width: 700px;
-
-    max-height: 60vh;
-
-    object-fit: contain;
-
-    border-radius: 8px;
-}
-
-.cropped-preview button {
-    position: static;
-
-    transform: none;
-
-    background: white;
-
-    color: black;
-}
-
-
-/* =========================
-   CANVAS
-   ========================= */
-
-#captureCanvas,
-#cropCanvas {
-    display: none;
-}
-/* =========================
-   OCR
-   ========================= */
-
-#ocrButton,
-#confirmButton,
-#backToCropButton {
-    position: static;
-
-    transform: none;
-
-    background: white;
-    color: black;
-}
-
-#ocrButton {
-    margin-top: 5px;
-}
-
-#ocrStatus {
-    margin: 0;
-
-    min-height: 20px;
-
-    font-size: 14px;
-
-    text-align: center;
-}
-
-#ocrResult {
-    width: 90%;
-    max-width: 500px;
-
-    padding: 14px;
-
-    border: 2px solid white;
-    border-radius: 12px;
-
-    background: #111;
-    color: white;
-
-    font-size: 20px;
-
-    text-align: center;
-
-    outline: none;
-}
-
-#ocrResult:focus {
-    border-color: #aaa;
+/* responsive tweaks */
+@media (max-width:520px){
+  #captureButton{ height:58px; width:58px; font-size:20px; }
+  .ocr-progress{ width:160px; }
+  #ocrResult{ font-size:18px; }
 }
