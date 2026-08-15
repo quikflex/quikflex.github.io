@@ -584,9 +584,10 @@ cropButton.addEventListener("click", () => {
     console.log(
         "Code i crop pinis."
     );
+    runOCR();
 });
 
-runOCR();
+
 
 /* =========================
    CROP AGAIN
