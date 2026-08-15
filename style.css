@@ -25,6 +25,11 @@ body {
     height: 100%;
 }
 
+
+/* =========================
+   CAMERA
+   ========================= */
+
 #camera {
     position: absolute;
 
@@ -44,6 +49,7 @@ body {
     inset: 0;
 
     display: flex;
+
     justify-content: center;
     align-items: center;
 
@@ -118,7 +124,10 @@ body {
     text-align: center;
 }
 
-/* Buttons */
+
+/* =========================
+   BUTTONS
+   ========================= */
 
 button {
     position: absolute;
@@ -136,6 +145,7 @@ button {
     padding: 15px 30px;
 
     font-size: 16px;
+
     font-weight: bold;
 
     cursor: pointer;
@@ -162,22 +172,27 @@ button {
 #captureButton:disabled {
     opacity: 0.5;
 }
-/* Preview */
+
+
+/* =========================
+   PREVIEW
+   ========================= */
 
 .preview {
     position: absolute;
 
     inset: 0;
 
-    z-index: 50;
+    z-index: 200;
 
     display: none;
 
     flex-direction: column;
+
     align-items: center;
     justify-content: center;
 
-    gap: 20px;
+    gap: 12px;
 
     padding: 20px;
 
@@ -188,27 +203,212 @@ button {
     display: flex;
 }
 
+.cropInstruction {
+    margin: 0;
+
+    font-size: 17px;
+
+    font-weight: bold;
+}
+
+
+/* =========================
+   CROP AREA
+   ========================= */
+
+.crop-area {
+    position: relative;
+
+    width: 100%;
+    max-width: 700px;
+
+    max-height: 65vh;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+
+    touch-action: none;
+}
+
 #previewImage {
     display: block;
 
     width: 100%;
-    max-width: 700px;
-    max-height: 75vh;
+    max-height: 65vh;
 
     object-fit: contain;
 
-    border-radius: 12px;
+    border-radius: 8px;
+
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
-#retakeButton {
+
+/* =========================
+   CROP SELECTION
+   ========================= */
+
+.crop-selection {
+    position: absolute;
+
+    left: 20%;
+    top: 35%;
+
+    width: 60%;
+    height: 25%;
+
+    border: 2px solid white;
+
+    background: rgba(255, 255, 255, 0.08);
+
+    box-shadow:
+        0 0 0 9999px rgba(0, 0, 0, 0.45);
+
+    touch-action: none;
+
+    cursor: move;
+}
+
+.crop-handle {
+    position: absolute;
+
+    width: 22px;
+    height: 22px;
+
+    border: 4px solid white;
+
+    background: transparent;
+
+    touch-action: none;
+}
+
+.crop-handle.top-left {
+    top: -3px;
+    left: -3px;
+
+    border-right: none;
+    border-bottom: none;
+}
+
+.crop-handle.top-right {
+    top: -3px;
+    right: -3px;
+
+    border-left: none;
+    border-bottom: none;
+}
+
+.crop-handle.bottom-left {
+    bottom: -3px;
+    left: -3px;
+
+    border-right: none;
+    border-top: none;
+}
+
+.crop-handle.bottom-right {
+    bottom: -3px;
+    right: -3px;
+
+    border-left: none;
+    border-top: none;
+}
+
+
+/* =========================
+   CROP BUTTONS
+   ========================= */
+
+.cropButtons {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    width: 100%;
+}
+
+.cropButtons button {
     position: static;
 
     transform: none;
 
     background: white;
+
     color: black;
 }
 
-#captureCanvas {
+
+/* =========================
+   CROPPED RESULT
+   ========================= */
+
+.cropped-preview {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 300;
+
+    display: none;
+
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 20px;
+
+    padding: 20px;
+
+    background: #000;
+}
+
+.cropped-preview.active {
+    display: flex;
+}
+
+.cropped-preview p {
+    margin: 0;
+
+    font-size: 18px;
+
+    font-weight: bold;
+}
+
+#croppedImage {
+    width: 100%;
+    max-width: 700px;
+
+    max-height: 60vh;
+
+    object-fit: contain;
+
+    border-radius: 8px;
+}
+
+.cropped-preview button {
+    position: static;
+
+    transform: none;
+
+    background: white;
+
+    color: black;
+}
+
+
+/* =========================
+   CANVAS
+   ========================= */
+
+#captureCanvas,
+#cropCanvas {
     display: none;
 }
