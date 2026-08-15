@@ -1,5 +1,26 @@
-- name: Inspect PaddleOCR.js
-  run: |
-    cat package.json
-    echo "===== PACKAGE ====="
-    find node_modules/@paddleocr/paddleocr-js -maxdepth 3 -type f | sort
+name: Inspect PaddleOCR.js
+
+on:
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Inspect PaddleOCR.js
+        run: |
+          cat package.json
+          echo "===== PACKAGE FILES ====="
+          find node_modules/@paddleocr/paddleocr-js -maxdepth 3 -type f | sort
