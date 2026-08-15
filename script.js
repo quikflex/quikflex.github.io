@@ -467,7 +467,7 @@ cropSelection.addEventListener(
    CREATE CROPPED IMAGE
    ========================= */
 
-cropButton.addEventListener("click", () => {
+cropButton.addEventListener("click", async () => {
 
     const image =
         previewImage;
