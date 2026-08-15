@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>QuikScan</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="scanner">
+        <video id="camera" autoplay playsinline></video>
+
+        <div class="overlay">
+            <div class="scan-frame">
+                <div class="corner top-left"></div>
+                <div class="corner top-right"></div>
+                <div class="corner bottom-left"></div>
+                <div class="corner bottom-right"></div>
+            </div>
+
+            <p class="instruction">Place the Flex code inside the frame</p>
+        </div>
+
+        <button id="startCamera">Start Camera</button>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
