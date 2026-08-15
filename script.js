@@ -1,4 +1,6 @@
-console.log("QUIKSCAN SCRIPT STARTED");
+import { createRapidOCREngine } from
+    "https://unpkg.com/client-side-ocr@2.1.0/dist/index.mjs";
+
 const video = document.getElementById("camera");
 
 const startButton =
@@ -635,15 +637,6 @@ async function initializeOCR() {
 
     try {
 
-        if (
-            typeof window.createRapidOCREngine !==
-            "function"
-        ) {
-            throw new Error(
-                "createRapidOCREngine i no load."
-            );
-        }
-
         rapidOCR =
             window.createRapidOCREngine({
                 language: "en",
@@ -716,7 +709,7 @@ ocrButton.addEventListener("click", async () => {
         );
 
         const result =
-            await rapidOCR.process(
+            await rapidOCR.processImage(
                 cropCanvas
             );
 
