@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@paddleocr/paddleocr-js": "^0.4.2"
+  }
+}
