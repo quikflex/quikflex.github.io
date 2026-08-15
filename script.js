@@ -1,4 +1,12 @@
-const video = document.getElementById("camera");
+import { PaddleOCR } from "@paddleocr/paddleocr-js";
+
+
+/* =========================
+   ELEMENTS
+   ========================= */
+
+const video =
+    document.getElementById("camera");
 
 const startButton =
     document.getElementById("startCamera");
@@ -24,9 +32,6 @@ const cropButton =
 const cropArea =
     document.getElementById("cropArea");
 
-const cropSelection =
-    document.getElementById("cropSelection");
-
 const cropCanvas =
     document.getElementById("cropCanvas");
 
@@ -35,9 +40,6 @@ const croppedPreview =
 
 const croppedImage =
     document.getElementById("croppedImage");
-
-const backToCropButton =
-    document.getElementById("backToCropButton");
 
 const ocrStatus =
     document.getElementById("ocrStatus");
@@ -48,11 +50,6 @@ const ocrResult =
 const confirmButton =
     document.getElementById("confirmButton");
 
-// ocrButton may have been removed from the DOM (we run OCR automatically),
-// so grab it if it exists and guard uses.
-const ocrButton = document.getElementById("ocrButton");
-
-
 
 /* =========================
    CAMERA
@@ -60,466 +57,268 @@ const ocrButton = document.getElementById("ocrButton");
 
 let cameraStream = null;
 
-let dragging = false;
 
-let dragMode = "move";
+startButton.addEventListener(
+    "click",
+    async () => {
 
-let startX = 0;
-let startY = 0;
-
-let startLeft = 0;
-let startTop = 0;
-
-let startWidth = 0;
-let startHeight = 0;
-
-
-/* =========================
-   CAMERA
-   ========================= */
-
-startButton.addEventListener("click", async () => {
-
-    console.log("Camera button i press.");
-
-    try {
-
-        cameraStream =
-            await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: "environment"
-                },
-                audio: false
-            });
-
-        video.srcObject = cameraStream;
-
-        startButton.style.display = "none";
-        captureButton.disabled = false;
-        captureButton.style.display = "block";
-
-        console.log("Kamera i wok.");
-
-    } catch (error) {
-
-        console.error(
-            "Camera error:",
-            error
+        console.log(
+            "Camera button i press."
         );
 
-        alert(
-            "Kamera i no inap. Plis checkim permission."
-        );
+        try {
+
+            cameraStream =
+                await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: "environment"
+                    },
+                    audio: false
+                });
+
+            video.srcObject =
+                cameraStream;
+
+            startButton.style.display =
+                "none";
+
+            captureButton.disabled =
+                false;
+
+            captureButton.style.display =
+                "block";
+
+            console.log(
+                "Kamera i wok."
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Camera error:",
+                error
+            );
+
+            alert(
+                "Kamera i no inap. Plis checkim permission."
+            );
+        }
     }
-});
+);
 
 
 /* =========================
    CAPTURE
    ========================= */
 
-captureButton.addEventListener("click", () => {
+captureButton.addEventListener(
+    "click",
+    () => {
 
-    console.log("Capture button i press.");
-
-    if (!video.videoWidth) {
-
-        alert(
-            "Kamera i no redi yet."
+        console.log(
+            "Capture button i press."
         );
 
-        return;
+        if (!video.videoWidth) {
+
+            alert(
+                "Kamera i no redi yet."
+            );
+
+            return;
+        }
+
+        canvas.width =
+            video.videoWidth;
+
+        canvas.height =
+            video.videoHeight;
+
+        const context =
+            canvas.getContext("2d");
+
+        context.drawImage(
+            video,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        previewImage.src =
+            canvas.toDataURL(
+                "image/jpeg",
+                0.95
+            );
+
+        preview.classList.add(
+            "active"
+        );
+
+        captureButton.style.display =
+            "none";
+
+        console.log(
+            "Piksa i kisim pinis."
+        );
     }
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const context =
-        canvas.getContext("2d");
-
-    context.drawImage(
-        video,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    const image =
-        canvas.toDataURL(
-            "image/jpeg",
-            0.95
-        );
-
-    previewImage.src = image;
-
-    preview.classList.add("active");
-
-    captureButton.style.display = "none";
-
-    console.log(
-        "Piksa i kisim pinis."
-    );
-});
+);
 
 
 /* =========================
    RETAKE
    ========================= */
 
-retakeButton.addEventListener("click", () => {
-
-    preview.classList.remove("active");
-
-    previewImage.src = "";
-
-    captureButton.style.display = "block";
-
-    console.log(
-        "Go bek long kamera."
-    );
-});
-
-
-/* =========================
-   CROP SELECTION
-   ========================= */
-
-function getPointerPosition(event) {
-
-    const rect =
-        cropArea.getBoundingClientRect();
-
-    return {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top
-    };
-}
-
-
-function beginCrop(event) {
-
-    event.preventDefault();
-
-    const target =
-        event.target;
-
-    if (
-        target.classList.contains(
-            "crop-handle"
-        )
-    ) {
-
-        dragMode =
-            target.classList.contains(
-                "top-left"
-            )
-                ? "top-left"
-                : target.classList.contains(
-                    "top-right"
-                )
-                    ? "top-right"
-                    : target.classList.contains(
-                        "bottom-left"
-                    )
-                        ? "bottom-left"
-                        : "bottom-right";
-
-    } else {
-
-        dragMode = "move";
-    }
-
-    const position =
-        getPointerPosition(event);
-
-    const selection =
-        cropSelection.getBoundingClientRect();
-
-    const area =
-        cropArea.getBoundingClientRect();
-
-    startX = position.x;
-    startY = position.y;
-
-    startLeft =
-        selection.left - area.left;
-
-    startTop =
-        selection.top - area.top;
-
-    startWidth =
-        selection.width;
-
-    startHeight =
-        selection.height;
-
-    dragging = true;
-
-    cropSelection.setPointerCapture(
-        event.pointerId
-    );
-}
-
-
-function moveCrop(event) {
-
-    if (!dragging) {
-        return;
-    }
-
-    event.preventDefault();
-
-    const position =
-        getPointerPosition(event);
-
-    const dx =
-        position.x - startX;
-
-    const dy =
-        position.y - startY;
-
-    const areaWidth =
-        cropArea.clientWidth;
-
-    const areaHeight =
-        cropArea.clientHeight;
-
-    const minimumSize = 40;
-
-    let left = startLeft;
-    let top = startTop;
-
-    let width = startWidth;
-    let height = startHeight;
-
-
-    if (dragMode === "move") {
-
-        left =
-            Math.max(
-                0,
-                Math.min(
-                    areaWidth - width,
-                    startLeft + dx
-                )
-            );
-
-        top =
-            Math.max(
-                0,
-                Math.min(
-                    areaHeight - height,
-                    startTop + dy
-                )
-            );
-    }
-
-
-    if (dragMode === "top-left") {
-
-        left =
-            Math.max(
-                0,
-                Math.min(
-                    startLeft + startWidth - minimumSize,
-                    startLeft + dx
-                )
-            );
-
-        top =
-            Math.max(
-                0,
-                Math.min(
-                    startTop + startHeight - minimumSize,
-                    startTop + dy
-                )
-            );
-
-        width =
-            startWidth +
-            (startLeft - left);
-
-        height =
-            startHeight +
-            (startTop - top);
-    }
-
-
-    if (dragMode === "top-right") {
-
-        top =
-            Math.max(
-                0,
-                Math.min(
-                    startTop + startHeight - minimumSize,
-                    startTop + dy
-                )
-            );
-
-        width =
-            Math.max(
-                minimumSize,
-                Math.min(
-                    areaWidth - startLeft,
-                    startWidth + dx
-                )
-            );
-
-        height =
-            startHeight +
-            (startTop - top);
-    }
-
-
-    if (dragMode === "bottom-left") {
-
-        left =
-            Math.max(
-                0,
-                Math.min(
-                    startLeft + startWidth - minimumSize,
-                    startLeft + dx
-                )
-            );
-
-        width =
-            startWidth +
-            (startLeft - left);
-
-        height =
-            Math.max(
-                minimumSize,
-                Math.min(
-                    areaHeight - startTop,
-                    startHeight + dy
-                )
-            );
-    }
-
-
-    if (dragMode === "bottom-right") {
-
-        width =
-            Math.max(
-                minimumSize,
-                Math.min(
-                    areaWidth - startLeft,
-                    startWidth + dx
-                )
-            );
-
-        height =
-            Math.max(
-                minimumSize,
-                Math.min(
-                    areaHeight - startTop,
-                    startHeight + dy
-                )
-            );
-    }
-
-
-    cropSelection.style.left =
-        `${left}px`;
-
-    cropSelection.style.top =
-        `${top}px`;
-
-    cropSelection.style.width =
-        `${width}px`;
-
-    cropSelection.style.height =
-        `${height}px`;
-}
-
-
-function endCrop() {
-
-    dragging = false;
-}
-
-
-cropSelection.addEventListener(
-    "pointerdown",
-    beginCrop
-);
-
-cropSelection.addEventListener(
-    "pointermove",
-    moveCrop
-);
-
-cropSelection.addEventListener(
-    "pointerup",
-    endCrop
-);
-
-cropSelection.addEventListener(
-    "pointercancel",
-    endCrop
-);
-
-
-/* =========================
-   CREATE CROPPED IMAGE
-   ========================= */
-
-cropButton.addEventListener("click", () => {
-
-    const image =
-        previewImage;
-
-    if (!image.naturalWidth) {
-
-        alert(
-            "Piksa i no redi yet."
+retakeButton.addEventListener(
+    "click",
+    () => {
+
+        preview.classList.remove(
+            "active"
         );
 
-        return;
+        croppedPreview.classList.remove(
+            "active"
+        );
+
+        previewImage.src =
+            "";
+
+        croppedImage.src =
+            "";
+
+        ocrResult.value =
+            "";
+
+        ocrStatus.textContent =
+            "";
+
+        captureButton.style.display =
+            "block";
+
+        console.log(
+            "Go bek long kamera."
+        );
+    }
+);
+
+
+/* =========================
+   PADDLEOCR
+   ========================= */
+
+let paddleOCR = null;
+
+
+async function getPaddleOCR() {
+
+    if (paddleOCR) {
+        return paddleOCR;
+    }
+
+    console.log(
+        "PaddleOCR i load..."
+    );
+
+    paddleOCR =
+        await PaddleOCR.create({
+
+            textDetectionModelName:
+                "PP-OCRv6_tiny_det",
+
+            textDetectionModelAsset: {
+                url:
+                    "./ocr/ppocrv6-tiny-det.tar"
+            },
+
+            textRecognitionModelName:
+                "PP-OCRv6_tiny_rec",
+
+            textRecognitionModelAsset: {
+                url:
+                    "./ocr/ppocrv6-tiny-rec.tar"
+            },
+
+            ortOptions: {
+                backend: "wasm"
+            }
+        });
+
+    console.log(
+        "PaddleOCR i redi."
+    );
+
+    return paddleOCR;
+}
+
+
+/* =========================
+   AUTOMATIC FRAME CROP
+   ========================= */
+
+function createFrameCrop() {
+
+    if (
+        !canvas.width ||
+        !canvas.height
+    ) {
+
+        throw new Error(
+            "Capture image i no stap."
+        );
     }
 
     const imageRect =
-        image.getBoundingClientRect();
+        previewImage.getBoundingClientRect();
 
-    const selectionRect =
-        cropSelection.getBoundingClientRect();
+    const frameRect =
+        cropArea.getBoundingClientRect();
 
+
+    /*
+     * Convert the visible frame position
+     * into coordinates in the original
+     * captured image.
+     */
 
     const scaleX =
-        image.naturalWidth /
+        canvas.width /
         imageRect.width;
 
     const scaleY =
-        image.naturalHeight /
+        canvas.height /
         imageRect.height;
 
 
     let sourceX =
-        (selectionRect.left -
+        (frameRect.left -
             imageRect.left) *
         scaleX;
 
     let sourceY =
-        (selectionRect.top -
+        (frameRect.top -
             imageRect.top) *
         scaleY;
 
     let sourceWidth =
-        selectionRect.width *
+        frameRect.width *
         scaleX;
 
     let sourceHeight =
-        selectionRect.height *
+        frameRect.height *
         scaleY;
 
+
+    /*
+     * Keep the crop inside the image.
+     */
 
     sourceX =
         Math.max(
             0,
             Math.min(
                 sourceX,
-                image.naturalWidth
+                canvas.width
             )
         );
 
@@ -528,22 +327,26 @@ cropButton.addEventListener("click", () => {
             0,
             Math.min(
                 sourceY,
-                image.naturalHeight
+                canvas.height
             )
         );
 
     sourceWidth =
         Math.min(
             sourceWidth,
-            image.naturalWidth - sourceX
+            canvas.width - sourceX
         );
 
     sourceHeight =
         Math.min(
             sourceHeight,
-            image.naturalHeight - sourceY
+            canvas.height - sourceY
         );
 
+
+    /*
+     * Create the cropped canvas.
+     */
 
     cropCanvas.width =
         Math.round(sourceWidth);
@@ -556,11 +359,13 @@ cropButton.addEventListener("click", () => {
         cropCanvas.getContext("2d");
 
     context.drawImage(
-        image,
+        canvas,
+
         sourceX,
         sourceY,
         sourceWidth,
         sourceHeight,
+
         0,
         0,
         cropCanvas.width,
@@ -575,276 +380,223 @@ cropButton.addEventListener("click", () => {
         );
 
 
-    preview.classList.remove(
-        "active"
-    );
-
-    croppedPreview.classList.add(
-        "active"
-    );
-
-
     console.log(
-        "Code i crop pinis."
+        "Automatic frame crop:",
+        `${cropCanvas.width} × ${cropCanvas.height}px`
     );
-    runOCR();
-});
-
-
-
-/* =========================
-   CROP AGAIN
-   ========================= */
-
-backToCropButton.addEventListener(
-    "click",
-    () => {
-
-        croppedPreview.classList.remove(
-            "active"
-        );
-
-        preview.classList.add(
-            "active"
-        );
-
-        console.log(
-            "Go bek long crop."
-        );
-    }
-);
-
-
-
-
-/* =========================
-   OCR - TESSERACT
-   ========================= */
-
-function upscaleCanvas(sourceCanvas, scale = 3) {
-
-    const canvas =
-        document.createElement("canvas");
-
-    canvas.width =
-        sourceCanvas.width * scale;
-
-    canvas.height =
-        sourceCanvas.height * scale;
-
-    const context =
-        canvas.getContext("2d");
-
-    context.imageSmoothingEnabled = false;
-
-    context.drawImage(
-        sourceCanvas,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    return canvas;
 }
 
 
+/* =========================
+   OCR
+   ========================= */
+
 async function runOCR() {
 
-        console.log("OCR i stat.");
+    console.log(
+        "PaddleOCR i stat."
+    );
 
-        if (
-            !cropCanvas.width ||
-            !cropCanvas.height
-        ) {
+    if (
+        !cropCanvas.width ||
+        !cropCanvas.height
+    ) {
 
-            alert(
-                "No gat crop image."
+        alert(
+            "No gat crop image."
+        );
+
+        return;
+    }
+
+
+    ocrStatus.textContent =
+        "OCR i wok...";
+
+    ocrResult.value =
+        "";
+
+
+    try {
+
+        const ocr =
+            await getPaddleOCR();
+
+
+        console.log(
+            "Running PaddleOCR..."
+        );
+
+
+        const [result] =
+            await ocr.predict(
+                cropCanvas
             );
 
-            return;
-        }
+
+        console.log(
+            "PaddleOCR result:",
+            result
+        );
+
+
+        const items =
+            result?.items || [];
+
+
+        const rawText =
+            items
+                .map(
+                    item =>
+                        item.text || ""
+                )
+                .join("");
+
+
+        console.log(
+            "OCR raw result:",
+            JSON.stringify(
+                rawText
+            )
+        );
+
 
         /*
-         * Make sure Tesseract actually exists.
+         * QuikScan only needs numbers.
          */
 
-        if (
-            typeof Tesseract ===
-            "undefined"
-        ) {
-
-            console.error(
-                "Tesseract object i no stap."
+        const text =
+            rawText.replace(
+                /\D/g,
+                ""
             );
 
+
+        console.log(
+            "Cleaned OCR result:",
+            JSON.stringify(
+                text
+            )
+        );
+
+
+        if (!text) {
+
             ocrStatus.textContent =
-                "Tesseract i no load.";
+                "OCR i no painim code.";
 
             return;
         }
 
-        // If there's an ocrButton present, disable it while OCR runs.
-        if (ocrButton) ocrButton.disabled = true;
+
+        ocrResult.value =
+            text;
 
         ocrStatus.textContent =
-            "OCR i wok...";
+            "Checkim code na stret.";
 
-        ocrResult.value = "";
+
+        console.log(
+            "Final Flex code:",
+            text
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "PaddleOCR error:",
+            error
+        );
+
+        console.error(
+            "PaddleOCR error name:",
+            error?.name
+        );
+
+        console.error(
+            "PaddleOCR error message:",
+            error?.message
+        );
+
+        console.error(
+            "PaddleOCR error stack:",
+            error?.stack
+        );
+
+
+        ocrStatus.textContent =
+            "OCR i no inap wok.";
+    }
+}
+
+
+/* =========================
+   AUTOMATIC OCR AFTER CAPTURE
+   ========================= */
+
+cropButton.addEventListener(
+    "click",
+    async () => {
+
+        console.log(
+            "Automatic frame crop i stat."
+        );
+
+
+        if (!previewImage.naturalWidth) {
+
+            alert(
+                "Piksa i no redi yet."
+            );
+
+            return;
+        }
+
 
         try {
 
             /*
-             * 3× upscale.
+             * Crop exactly what is
+             * inside the view frame.
              */
 
-            const ocrCanvas =
-                upscaleCanvas(
-                    cropCanvas,
-                    3
-                );
+            createFrameCrop();
+
+
+            preview.classList.remove(
+                "active"
+            );
+
+            croppedPreview.classList.add(
+                "active"
+            );
+
 
             console.log(
-                "OCR image:",
-                `${ocrCanvas.width} × ${ocrCanvas.height}px`
+                "Code i crop pinis."
             );
 
 
             /*
-             * Convert the canvas to a JPEG data URL.
-             *
-             * This avoids relying on Tesseract's
-             * Canvas/ImageLike handling on WebKit.
+             * Immediately run PaddleOCR.
              */
 
-            const imageData =
-                ocrCanvas.toDataURL(
-                    "image/jpeg",
-                    0.95
-                );
+            await runOCR();
 
-            console.log(
-                "OCR image converted to data URL."
-            );
-
-
-            /*
-             * Run Tesseract.
-             */
-
-            const result =
-                await Tesseract.recognize(
-                    imageData,
-                    "eng",
-                    {
-                        logger: message => {
-
-                            console.log(
-                                "OCR:",
-                                message
-                            );
-
-                            if (
-                                message.status ===
-                                "recognizing text"
-                            ) {
-
-                                const percent =
-                                    Math.round(
-                                        message.progress *
-                                        100
-                                    );
-
-                                ocrStatus.textContent =
-                                    `OCR i wok... ${percent}%`;
-                            }
-                        }
-                    }
-                );
-
-
-            console.log(
-                "Tesseract result:",
-                result
-            );
-
-
-            const rawText =
-                result?.data?.text || "";
-
-            console.log(
-                "OCR raw result:",
-                JSON.stringify(rawText)
-            );
-
-
-            /*
-             * Keep numbers only.
-             */
-
-            const text =
-                rawText.replace(
-                    /\D/g,
-                    ""
-                );
-
-            console.log(
-                "Cleaned OCR result:",
-                JSON.stringify(text)
-            );
-
-
-            if (!text) {
-
-                ocrStatus.textContent =
-                    "OCR i no painim code.";
-
-                return;
-            }
-
-
-            ocrResult.value =
-                text;
-
-            ocrStatus.textContent =
-                "Checkim code na stret.";
-
-            console.log(
-                "Final Flex code:",
-                text
-            );
 
         } catch (error) {
 
             console.error(
-                "OCR error:",
+                "Automatic OCR error:",
                 error
-            );
-
-            console.error(
-                "OCR error name:",
-                error?.name
-            );
-
-            console.error(
-                "OCR error message:",
-                error?.message
-            );
-
-            console.error(
-                "OCR error stack:",
-                error?.stack
             );
 
             ocrStatus.textContent =
                 "OCR i no inap wok.";
-
-        } finally {
-
-            if (ocrButton) ocrButton.disabled = false;
         }
     }
-
+);
 
 
 /* =========================
