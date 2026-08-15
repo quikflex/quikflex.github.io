@@ -630,54 +630,6 @@ ocrButton.addEventListener("click", async () => {
 });
 
 
-        /*
-         * Flex codes are numbers.
-         * Remove everything except digits.
-         */
-
-        const text =
-            result.data.text
-                .replace(/\D/g, "");
-
-
-        ocrResult.value =
-            text;
-
-        ocrStatus.textContent =
-            text
-                ? "Checkim code na stret."
-                : "OCR i no painim code.";
-
-        console.log(
-            "OCR result:",
-            result.data.text
-        );
-
-        console.log(
-            "Cleaned result:",
-            text
-        );
-
-    } catch (error) {
-
-        console.error(
-            "OCR error:",
-            error
-        );
-
-        ocrStatus.textContent =
-            "OCR i gat problem.";
-
-        alert(
-            "OCR i no inap wok."
-        );
-
-    } finally {
-
-        ocrButton.disabled = false;
-    }
-});
-
 
 /* =========================
    CONFIRM OCR
