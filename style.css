@@ -124,6 +124,7 @@ button {
     position: absolute;
 
     left: 50%;
+
     transform: translateX(-50%);
 
     z-index: 20;
@@ -148,25 +149,19 @@ button {
 }
 
 #captureButton {
-    position: absolute;
-    left: 50%;
     bottom: 30px;
-    transform: translateX(-50%);
-
-    z-index: 100;
-
-    display: block;
 
     background: white;
     color: black;
 
     min-width: 150px;
+
+    z-index: 100;
 }
 
 #captureButton:disabled {
     opacity: 0.5;
 }
-
 /* Preview */
 
 .preview {
