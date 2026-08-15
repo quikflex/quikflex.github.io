@@ -624,155 +624,84 @@ backToCropButton.addEventListener(
    ========================= */
 
 async function initializeOCR() {
+    if (rapidOCRReady) return;
 
-    if (rapidOCRReady) {
-        return;
+    console.log("RapidOCR i load...");
+    ocrStatus.textContent = "RapidOCR i load...";
+
+    function dumpErrorDetails(err) {
+        try {
+            console.error("---- begin error dump ----");
+            console.error("Error constructor name:", err?.constructor?.name);
+            console.error("Error name:", err?.name);
+            console.error("Error message:", err?.message);
+            console.error("Error stack:", err?.stack);
+            try {
+                console.error("JSON.stringify(err):", JSON.stringify(err));
+            } catch (e) {
+                console.error("Could not stringify err:", e);
+            }
+            const props = Object.getOwnPropertyNames(err || {}).concat(Object.keys(err || {}));
+            for (const p of [...new Set(props)]) {
+                try {
+                    console.error(`err[${p}] =`, err[p]);
+                } catch (e) {
+                    console.error(`err[${p}] read failed:`, e);
+                }
+            }
+            console.error("---- end error dump ----");
+        } catch (e) {
+            console.error("Failed to dump error details:", e);
+        }
     }
 
-    console.log(
-        "RapidOCR i load..."
-    );
-
-    ocrStatus.textContent =
-        "RapidOCR i load...";
-
     try {
-
-        /*
-         * Load RapidOCR only when needed.
-         * This prevents a broken OCR module
-         * from killing the entire scanner.
-         */
-
-        if (
-            typeof window.createRapidOCREngine !==
-            "function"
-        ) {
-
-            console.log(
-                "Loading RapidOCR module..."
-            );
-
-            const script =
-                document.createElement(
-                    "script"
-                );
-
-            script.type =
-                "module";
-
-            script.textContent = `
-                import {
-                    createRapidOCREngine
-                } from
-                    "https://unpkg.com/client-side-ocr@2.1.0/dist/index.mjs";
-
-                window.createRapidOCREngine =
-                    createRapidOCREngine;
-            `;
-
-            document.head.appendChild(
-                script
-            );
-
-
-            await new Promise(
-                (resolve, reject) => {
-
-                    const timeout =
-                        setTimeout(
-                            () => {
-
-                                reject(
-                                    new Error(
-                                        "RapidOCR module load timed out after 30 seconds."
-                                    )
-                                );
-
-                            },
-                            30000
-                        );
-
-
-                    const check =
-                        setInterval(
-                            () => {
-
-                                if (
-                                    typeof window.createRapidOCREngine ===
-                                    "function"
-                                ) {
-
-                                    clearInterval(
-                                        check
-                                    );
-
-                                    clearTimeout(
-                                        timeout
-                                    );
-
-                                    resolve();
-                                }
-
-                            },
-                            100
-                        );
+        if (typeof window.createRapidOCREngine !== "function") {
+            // Use dynamic import which works without injecting inline module scripts
+            const url = "https://unpkg.com/client-side-ocr@2.1.0/dist/index.mjs";
+            try {
+                const module = await Promise.race([
+                    import(url),
+                    new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error("Module import timed out after 30s")), 30000)
+                    )
+                ]);
+                if (!module || typeof module.createRapidOCREngine !== "function") {
+                    throw new Error("Module loaded but createRapidOCREngine export missing");
                 }
-            );
+                window.createRapidOCREngine = module.createRapidOCREngine;
+            } catch (impErr) {
+                dumpErrorDetails(impErr);
+                throw new Error("RapidOCR module import failed: " + (impErr?.message || String(impErr)));
+            }
         }
 
+        console.log("RapidOCR module loaded.");
 
-        console.log(
-            "RapidOCR module loaded."
-        );
+        rapidOCR = window.createRapidOCREngine({
+            language: "en",
+            modelVersion: "PP-OCRv4",
+            modelType: "mobile"
+        });
 
+        console.log("RapidOCR engine created, calling initialize()...");
 
-        rapidOCR =
-            window.createRapidOCREngine({
-                language: "en",
-                modelVersion: "PP-OCRv4",
-                modelType: "mobile"
-            });
+        try {
+            await rapidOCR.initialize();
+        } catch (initErr) {
+            // This is the important failure: likely failed to fetch/instantiate models or WASM
+            dumpErrorDetails(initErr);
+            throw new Error("RapidOCR initialize failed: " + (initErr?.message || String(initErr)));
+        }
 
-
-        console.log(
-            "RapidOCR engine created."
-        );
-
-
-        await rapidOCR.initialize();
-
-
-        rapidOCRReady =
-            true;
-
-
-        console.log(
-            "RapidOCR i redi."
-        );
-
-        ocrStatus.textContent =
-            "RapidOCR i redi.";
+        rapidOCRReady = true;
+        console.log("RapidOCR i redi.");
+        ocrStatus.textContent = "RapidOCR i redi.";
 
     } catch (error) {
-
-        console.error(
-            "RapidOCR initialization error:",
-            error
-        );
-
-        console.error(
-            "RapidOCR initialization error string:",
-            String(error)
-        );
-
-        ocrStatus.textContent =
-            "RapidOCR i no inap load: " +
-            (
-                error?.message ||
-                String(error)
-            );
-
+        console.error("RapidOCR initialization error:", error);
+        dumpErrorDetails(error);
+        ocrStatus.textContent = "RapidOCR i no inap load: " + (error?.message || String(error));
         throw error;
     }
 }
