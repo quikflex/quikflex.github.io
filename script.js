@@ -1,4 +1,4 @@
-import { RapidOCREngine } from "https://cdn.jsdelivr.net/npm/client-side-ocr@2.1.0/+esm";
+let RapidOCREngine = null;
 
 console.log("QUIKSCAN SCRIPT STARTED");
 const video = document.getElementById("camera");
@@ -636,6 +636,13 @@ async function initializeOCR() {
         "OCR i load...";
 
     try {
+
+        // Dynamically import the ESM module in environments where static `import` isn't allowed
+        if (!RapidOCREngine) {
+            const module = await import("https://cdn.jsdelivr.net/npm/client-side-ocr@2.1.0/+esm");
+            // module may export RapidOCREngine as a named export or default
+            RapidOCREngine = module.RapidOCREngine || module.default?.RapidOCREngine || module.default || module;
+        }
 
         rapidOCR =
             new RapidOCREngine({
