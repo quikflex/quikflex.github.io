@@ -83,29 +83,48 @@
 
     <!-- CROPPED RESULT -->
 
-    <div id="croppedPreview" class="cropped-preview">
+<div id="croppedPreview" class="cropped-preview">
 
-        <p>
-            Code bilong OCR:
-        </p>
+    <p>
+        Code bilong OCR:
+    </p>
 
-        <img
-            id="croppedImage"
-            alt="Cropped Flex code"
-        >
+    <img
+        id="croppedImage"
+        alt="Cropped Flex code"
+    >
 
-        <button id="backToCropButton">
-            🔄 Cropim Gen
-        </button>
+    <button id="ocrButton">
+        🔍 Luksave Code
+    </button>
 
-    </div>
+    <p id="ocrStatus"></p>
+
+    <input
+        id="ocrResult"
+        type="tel"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        autocomplete="off"
+        placeholder="OCR result bai kam hia"
+    >
+
+    <button id="confirmButton">
+        ✅ Confirm
+    </button>
+
+    <button id="backToCropButton">
+        🔄 Cropim Gen
+    </button>
+
+</div>
 
 
     <canvas id="captureCanvas"></canvas>
     <canvas id="cropCanvas"></canvas>
 
 </main>
-
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="script.js"></script>
 
 </body>
