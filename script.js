@@ -77,8 +77,8 @@ startButton.addEventListener("click", async () => {
         video.srcObject = cameraStream;
 
         startButton.style.display = "none";
-
         captureButton.disabled = false;
+        captureButton.style.display = "block";
 
         console.log("Kamera i wok.");
 
