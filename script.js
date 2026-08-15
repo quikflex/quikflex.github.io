@@ -1,3 +1,4 @@
+console.log("QUIKSCAN SCRIPT STARTED");
 const video = document.getElementById("camera");
 
 const startButton =
