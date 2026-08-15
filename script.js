@@ -48,6 +48,9 @@ const ocrResult =
 const confirmButton =
     document.getElementById("confirmButton");
 
+// ocrButton may have been removed from the DOM (we run OCR automatically),
+// so grab it if it exists and guard uses.
+const ocrButton = document.getElementById("ocrButton");
 
 
 
@@ -681,7 +684,8 @@ async function runOCR() {
             return;
         }
 
-        ocrButton.disabled = true;
+        // If there's an ocrButton present, disable it while OCR runs.
+        if (ocrButton) ocrButton.disabled = true;
 
         ocrStatus.textContent =
             "OCR i wok...";
@@ -837,7 +841,7 @@ async function runOCR() {
 
         } finally {
 
-            ocrButton.disabled = false;
+            if (ocrButton) ocrButton.disabled = false;
         }
     }
 
