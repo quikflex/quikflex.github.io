@@ -1,12 +1,4 @@
-console.log("QUIKSCAN SCRIPT STARTED");
-
-import { createRapidOCREngine } from
-    "https://unpkg.com/client-side-ocr@2.1.0/dist/index.mjs";
-
-console.log("RAPIDOCR MODULE LOADED");
-
-const video =
-    document.getElementById("camera");
+const video = document.getElementById("camera");
 
 const startButton =
     document.getElementById("startCamera");
@@ -60,12 +52,22 @@ const confirmButton =
     document.getElementById("confirmButton");
 
 
+/* =========================
+   RAPIDOCR
+   ========================= */
+
 let rapidOCR = null;
 let rapidOCRReady = false;
+
+
+/* =========================
+   CAMERA
+   ========================= */
 
 let cameraStream = null;
 
 let dragging = false;
+
 let dragMode = "move";
 
 let startX = 0;
@@ -82,139 +84,107 @@ let startHeight = 0;
    CAMERA
    ========================= */
 
-startButton.addEventListener(
-    "click",
-    async () => {
+startButton.addEventListener("click", async () => {
 
-        console.log(
-            "Camera button i press."
+    console.log("Camera button i press.");
+
+    try {
+
+        cameraStream =
+            await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: "environment"
+                },
+                audio: false
+            });
+
+        video.srcObject = cameraStream;
+
+        startButton.style.display = "none";
+        captureButton.disabled = false;
+        captureButton.style.display = "block";
+
+        console.log("Kamera i wok.");
+
+    } catch (error) {
+
+        console.error(
+            "Camera error:",
+            error
         );
 
-        try {
-
-            cameraStream =
-                await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: "environment"
-                    },
-                    audio: false
-                });
-
-            video.srcObject =
-                cameraStream;
-
-            startButton.style.display =
-                "none";
-
-            captureButton.disabled =
-                false;
-
-            captureButton.style.display =
-                "block";
-
-            console.log(
-                "Kamera i wok."
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Camera error:",
-                error
-            );
-
-            alert(
-                "Kamera i no inap. Plis checkim permission."
-            );
-        }
+        alert(
+            "Kamera i no inap. Plis checkim permission."
+        );
     }
-);
+});
 
 
 /* =========================
    CAPTURE
    ========================= */
 
-captureButton.addEventListener(
-    "click",
-    () => {
+captureButton.addEventListener("click", () => {
 
-        console.log(
-            "Capture button i press."
+    console.log("Capture button i press.");
+
+    if (!video.videoWidth) {
+
+        alert(
+            "Kamera i no redi yet."
         );
 
-        if (!video.videoWidth) {
-
-            alert(
-                "Kamera i no redi yet."
-            );
-
-            return;
-        }
-
-        canvas.width =
-            video.videoWidth;
-
-        canvas.height =
-            video.videoHeight;
-
-        const context =
-            canvas.getContext("2d");
-
-        context.drawImage(
-            video,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-
-        const image =
-            canvas.toDataURL(
-                "image/jpeg",
-                0.95
-            );
-
-        previewImage.src =
-            image;
-
-        preview.classList.add(
-            "active"
-        );
-
-        captureButton.style.display =
-            "none";
-
-        console.log(
-            "Piksa i kisim pinis."
-        );
+        return;
     }
-);
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context =
+        canvas.getContext("2d");
+
+    context.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    const image =
+        canvas.toDataURL(
+            "image/jpeg",
+            0.95
+        );
+
+    previewImage.src = image;
+
+    preview.classList.add("active");
+
+    captureButton.style.display = "none";
+
+    console.log(
+        "Piksa i kisim pinis."
+    );
+});
 
 
 /* =========================
    RETAKE
    ========================= */
 
-retakeButton.addEventListener(
-    "click",
-    () => {
+retakeButton.addEventListener("click", () => {
 
-        preview.classList.remove(
-            "active"
-        );
+    preview.classList.remove("active");
 
-        previewImage.src =
-            "";
+    previewImage.src = "";
 
-        captureButton.style.display =
-            "block";
+    captureButton.style.display = "block";
 
-        console.log(
-            "Go bek long kamera."
-        );
-    }
-);
+    console.log(
+        "Go bek long kamera."
+    );
+});
 
 
 /* =========================
@@ -227,13 +197,8 @@ function getPointerPosition(event) {
         cropArea.getBoundingClientRect();
 
     return {
-        x:
-            event.clientX -
-            rect.left,
-
-        y:
-            event.clientY -
-            rect.top
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
     };
 }
 
@@ -256,23 +221,19 @@ function beginCrop(event) {
                 "top-left"
             )
                 ? "top-left"
-
                 : target.classList.contains(
                     "top-right"
                 )
                     ? "top-right"
-
                     : target.classList.contains(
                         "bottom-left"
                     )
                         ? "bottom-left"
-
                         : "bottom-right";
 
     } else {
 
-        dragMode =
-            "move";
+        dragMode = "move";
     }
 
     const position =
@@ -284,19 +245,14 @@ function beginCrop(event) {
     const area =
         cropArea.getBoundingClientRect();
 
-    startX =
-        position.x;
-
-    startY =
-        position.y;
+    startX = position.x;
+    startY = position.y;
 
     startLeft =
-        selection.left -
-        area.left;
+        selection.left - area.left;
 
     startTop =
-        selection.top -
-        area.top;
+        selection.top - area.top;
 
     startWidth =
         selection.width;
@@ -304,8 +260,7 @@ function beginCrop(event) {
     startHeight =
         selection.height;
 
-    dragging =
-        true;
+    dragging = true;
 
     cropSelection.setPointerCapture(
         event.pointerId
@@ -325,12 +280,10 @@ function moveCrop(event) {
         getPointerPosition(event);
 
     const dx =
-        position.x -
-        startX;
+        position.x - startX;
 
     const dy =
-        position.y -
-        startY;
+        position.y - startY;
 
     const areaWidth =
         cropArea.clientWidth;
@@ -338,20 +291,13 @@ function moveCrop(event) {
     const areaHeight =
         cropArea.clientHeight;
 
-    const minimumSize =
-        40;
+    const minimumSize = 40;
 
-    let left =
-        startLeft;
+    let left = startLeft;
+    let top = startTop;
 
-    let top =
-        startTop;
-
-    let width =
-        startWidth;
-
-    let height =
-        startHeight;
+    let width = startWidth;
+    let height = startHeight;
 
 
     if (dragMode === "move") {
@@ -382,9 +328,7 @@ function moveCrop(event) {
             Math.max(
                 0,
                 Math.min(
-                    startLeft +
-                    startWidth -
-                    minimumSize,
+                    startLeft + startWidth - minimumSize,
                     startLeft + dx
                 )
             );
@@ -393,9 +337,7 @@ function moveCrop(event) {
             Math.max(
                 0,
                 Math.min(
-                    startTop +
-                    startHeight -
-                    minimumSize,
+                    startTop + startHeight - minimumSize,
                     startTop + dy
                 )
             );
@@ -416,9 +358,7 @@ function moveCrop(event) {
             Math.max(
                 0,
                 Math.min(
-                    startTop +
-                    startHeight -
-                    minimumSize,
+                    startTop + startHeight - minimumSize,
                     startTop + dy
                 )
             );
@@ -444,9 +384,7 @@ function moveCrop(event) {
             Math.max(
                 0,
                 Math.min(
-                    startLeft +
-                    startWidth -
-                    minimumSize,
+                    startLeft + startWidth - minimumSize,
                     startLeft + dx
                 )
             );
@@ -504,8 +442,7 @@ function moveCrop(event) {
 
 function endCrop() {
 
-    dragging =
-        false;
+    dragging = false;
 }
 
 
@@ -534,140 +471,129 @@ cropSelection.addEventListener(
    CREATE CROPPED IMAGE
    ========================= */
 
-cropButton.addEventListener(
-    "click",
-    () => {
+cropButton.addEventListener("click", () => {
 
-        const image =
-            previewImage;
+    const image =
+        previewImage;
 
-        if (!image.naturalWidth) {
+    if (!image.naturalWidth) {
 
-            alert(
-                "Piksa i no redi yet."
-            );
-
-            return;
-        }
-
-        const imageRect =
-            image.getBoundingClientRect();
-
-        const selectionRect =
-            cropSelection.getBoundingClientRect();
-
-        const scaleX =
-            image.naturalWidth /
-            imageRect.width;
-
-        const scaleY =
-            image.naturalHeight /
-            imageRect.height;
-
-        let sourceX =
-            (
-                selectionRect.left -
-                imageRect.left
-            ) * scaleX;
-
-        let sourceY =
-            (
-                selectionRect.top -
-                imageRect.top
-            ) * scaleY;
-
-        let sourceWidth =
-            selectionRect.width *
-            scaleX;
-
-        let sourceHeight =
-            selectionRect.height *
-            scaleY;
-
-
-        sourceX =
-            Math.max(
-                0,
-                Math.min(
-                    sourceX,
-                    image.naturalWidth
-                )
-            );
-
-        sourceY =
-            Math.max(
-                0,
-                Math.min(
-                    sourceY,
-                    image.naturalHeight
-                )
-            );
-
-        sourceWidth =
-            Math.min(
-                sourceWidth,
-                image.naturalWidth -
-                sourceX
-            );
-
-        sourceHeight =
-            Math.min(
-                sourceHeight,
-                image.naturalHeight -
-                sourceY
-            );
-
-
-        cropCanvas.width =
-            Math.round(
-                sourceWidth
-            );
-
-        cropCanvas.height =
-            Math.round(
-                sourceHeight
-            );
-
-
-        const context =
-            cropCanvas.getContext(
-                "2d"
-            );
-
-        context.drawImage(
-            image,
-            sourceX,
-            sourceY,
-            sourceWidth,
-            sourceHeight,
-            0,
-            0,
-            cropCanvas.width,
-            cropCanvas.height
+        alert(
+            "Piksa i no redi yet."
         );
 
-
-        croppedImage.src =
-            cropCanvas.toDataURL(
-                "image/jpeg",
-                0.95
-            );
-
-
-        preview.classList.remove(
-            "active"
-        );
-
-        croppedPreview.classList.add(
-            "active"
-        );
-
-
-        console.log(
-            "Code i crop pinis."
-        );
+        return;
     }
-);
+
+    const imageRect =
+        image.getBoundingClientRect();
+
+    const selectionRect =
+        cropSelection.getBoundingClientRect();
+
+
+    const scaleX =
+        image.naturalWidth /
+        imageRect.width;
+
+    const scaleY =
+        image.naturalHeight /
+        imageRect.height;
+
+
+    let sourceX =
+        (selectionRect.left -
+            imageRect.left) *
+        scaleX;
+
+    let sourceY =
+        (selectionRect.top -
+            imageRect.top) *
+        scaleY;
+
+    let sourceWidth =
+        selectionRect.width *
+        scaleX;
+
+    let sourceHeight =
+        selectionRect.height *
+        scaleY;
+
+
+    sourceX =
+        Math.max(
+            0,
+            Math.min(
+                sourceX,
+                image.naturalWidth
+            )
+        );
+
+    sourceY =
+        Math.max(
+            0,
+            Math.min(
+                sourceY,
+                image.naturalHeight
+            )
+        );
+
+    sourceWidth =
+        Math.min(
+            sourceWidth,
+            image.naturalWidth - sourceX
+        );
+
+    sourceHeight =
+        Math.min(
+            sourceHeight,
+            image.naturalHeight - sourceY
+        );
+
+
+    cropCanvas.width =
+        Math.round(sourceWidth);
+
+    cropCanvas.height =
+        Math.round(sourceHeight);
+
+
+    const context =
+        cropCanvas.getContext("2d");
+
+    context.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        cropCanvas.width,
+        cropCanvas.height
+    );
+
+
+    croppedImage.src =
+        cropCanvas.toDataURL(
+            "image/jpeg",
+            0.95
+        );
+
+
+    preview.classList.remove(
+        "active"
+    );
+
+    croppedPreview.classList.add(
+        "active"
+    );
+
+
+    console.log(
+        "Code i crop pinis."
+    );
+});
 
 
 /* =========================
@@ -694,7 +620,7 @@ backToCropButton.addEventListener(
 
 
 /* =========================
-   RAPID OCR
+   RAPIDOCR INITIALIZATION
    ========================= */
 
 async function initializeOCR() {
@@ -712,17 +638,114 @@ async function initializeOCR() {
 
     try {
 
+        /*
+         * Load RapidOCR only when needed.
+         * This prevents a broken OCR module
+         * from killing the entire scanner.
+         */
+
+        if (
+            typeof window.createRapidOCREngine !==
+            "function"
+        ) {
+
+            console.log(
+                "Loading RapidOCR module..."
+            );
+
+            const script =
+                document.createElement(
+                    "script"
+                );
+
+            script.type =
+                "module";
+
+            script.textContent = `
+                import {
+                    createRapidOCREngine
+                } from
+                    "https://unpkg.com/client-side-ocr@2.1.0/dist/index.mjs";
+
+                window.createRapidOCREngine =
+                    createRapidOCREngine;
+            `;
+
+            document.head.appendChild(
+                script
+            );
+
+
+            await new Promise(
+                (resolve, reject) => {
+
+                    const timeout =
+                        setTimeout(
+                            () => {
+
+                                reject(
+                                    new Error(
+                                        "RapidOCR module load timed out after 30 seconds."
+                                    )
+                                );
+
+                            },
+                            30000
+                        );
+
+
+                    const check =
+                        setInterval(
+                            () => {
+
+                                if (
+                                    typeof window.createRapidOCREngine ===
+                                    "function"
+                                ) {
+
+                                    clearInterval(
+                                        check
+                                    );
+
+                                    clearTimeout(
+                                        timeout
+                                    );
+
+                                    resolve();
+                                }
+
+                            },
+                            100
+                        );
+                }
+            );
+        }
+
+
+        console.log(
+            "RapidOCR module loaded."
+        );
+
+
         rapidOCR =
-            createRapidOCREngine({
+            window.createRapidOCREngine({
                 language: "en",
                 modelVersion: "PP-OCRv4",
                 modelType: "mobile"
             });
 
+
+        console.log(
+            "RapidOCR engine created."
+        );
+
+
         await rapidOCR.initialize();
+
 
         rapidOCRReady =
             true;
+
 
         console.log(
             "RapidOCR i redi."
@@ -738,6 +761,11 @@ async function initializeOCR() {
             error
         );
 
+        console.error(
+            "RapidOCR initialization error string:",
+            String(error)
+        );
+
         ocrStatus.textContent =
             "RapidOCR i no inap load: " +
             (
@@ -750,6 +778,10 @@ async function initializeOCR() {
 }
 
 
+/* =========================
+   OCR
+   ========================= */
+
 ocrButton.addEventListener(
     "click",
     async () => {
@@ -757,6 +789,7 @@ ocrButton.addEventListener(
         console.log(
             "RapidOCR i stat."
         );
+
 
         if (
             !cropCanvas.width ||
@@ -776,6 +809,7 @@ ocrButton.addEventListener(
             return;
         }
 
+
         ocrButton.disabled =
             true;
 
@@ -785,32 +819,39 @@ ocrButton.addEventListener(
         ocrResult.value =
             "";
 
+
         console.log(
             "OCR input:",
             `${cropCanvas.width} × ${cropCanvas.height}px`
         );
 
+
         const started =
             performance.now();
+
 
         try {
 
             await initializeOCR();
 
+
             console.log(
                 "RapidOCR inference i stat..."
             );
+
 
             const result =
                 await rapidOCR.processImage(
                     cropCanvas
                 );
 
+
             const elapsed =
                 Math.round(
                     performance.now() -
                     started
                 );
+
 
             console.log(
                 "RapidOCR result:",
@@ -882,6 +923,7 @@ ocrButton.addEventListener(
             ocrResult.value =
                 digits;
 
+
             ocrStatus.textContent =
                 `RapidOCR i painim ${digits.length} digit. Plis checkim code.`;
 
@@ -937,6 +979,7 @@ confirmButton.addEventListener(
                     ""
                 );
 
+
         if (!code) {
 
             alert(
@@ -945,6 +988,7 @@ confirmButton.addEventListener(
 
             return;
         }
+
 
         console.log(
             "Confirmed Flex code:",
