@@ -88,6 +88,7 @@ captureButton.addEventListener("click", () => {
      */
 
     preview.classList.add("active");
+    captureButton.style.display = "none";
 
     console.log("Piksa i kisim pinis.");
 });
@@ -96,8 +97,9 @@ captureButton.addEventListener("click", () => {
 retakeButton.addEventListener("click", () => {
 
     preview.classList.remove("active");
-
     previewImage.src = "";
+
+captureButton.style.display = "block";
 
     console.log("Go bek long kamera.");
 
