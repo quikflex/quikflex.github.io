@@ -21,6 +21,4 @@ jobs:
 
       - name: Inspect PaddleOCR.js
         run: |
-          cat package.json
-          echo "===== PACKAGE FILES ====="
-          find node_modules/@paddleocr/paddleocr-js -maxdepth 3 -type f | sort
+          cat node_modules/@paddleocr/paddleocr-js/README.md
