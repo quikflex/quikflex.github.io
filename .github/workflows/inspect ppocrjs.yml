@@ -1,0 +1,5 @@
+- name: Inspect PaddleOCR.js
+  run: |
+    cat package.json
+    echo "===== PACKAGE ====="
+    find node_modules/@paddleocr/paddleocr-js -maxdepth 3 -type f | sort
