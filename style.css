@@ -4,26 +4,55 @@
 
 html,
 body {
-    margin: 0;
-    padding: 0;
-
     width: 100%;
     height: 100%;
+    margin: 0;
+    padding: 0;
 
     background: #000;
     color: #fff;
 
-    font-family: Arial, sans-serif;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+}
 
+body {
     overflow: hidden;
 }
 
-.scanner {
+button {
+    font: inherit;
+}
+
+.app {
+    width: 100%;
+    height: 100%;
+}
+
+/* =========================
+   Views
+   ========================= */
+
+.view {
     position: relative;
 
     width: 100%;
     height: 100%;
+
+    display: none;
 }
+
+.view.active {
+    display: block;
+}
+
+/* =========================
+   Camera
+   ========================= */
 
 #camera {
     position: absolute;
@@ -38,14 +67,18 @@ body {
     background: #000;
 }
 
-.overlay {
+/* =========================
+   Scanner overlay
+   ========================= */
+
+.scanner-overlay {
     position: absolute;
 
     inset: 0;
 
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
 
     pointer-events: none;
 }
@@ -53,10 +86,10 @@ body {
 .scan-frame {
     position: relative;
 
-    width: 85%;
-    max-width: 500px;
+    width: 86%;
+    max-width: 520px;
 
-    height: 120px;
+    height: 130px;
 }
 
 .corner {
@@ -65,106 +98,161 @@ body {
     width: 32px;
     height: 32px;
 
-    border: 4px solid white;
+    border: 4px solid #fff;
 }
 
 .top-left {
     top: 0;
     left: 0;
 
-    border-right: none;
-    border-bottom: none;
+    border-right: 0;
+    border-bottom: 0;
 }
 
 .top-right {
     top: 0;
     right: 0;
 
-    border-left: none;
-    border-bottom: none;
+    border-left: 0;
+    border-bottom: 0;
 }
 
 .bottom-left {
     bottom: 0;
     left: 0;
 
-    border-right: none;
-    border-top: none;
+    border-right: 0;
+    border-top: 0;
 }
 
 .bottom-right {
-    bottom: 0;
     right: 0;
+    bottom: 0;
 
-    border-left: none;
-    border-top: none;
+    border-left: 0;
+    border-top: 0;
 }
 
 .instruction {
     position: absolute;
 
-    bottom: 20%;
+    left: 50%;
+    bottom: 18%;
+
+    transform: translateX(-50%);
+
+    width: max-content;
+    max-width: 90%;
 
     margin: 0;
 
     padding: 10px 16px;
 
-    background: rgba(0, 0, 0, 0.7);
-
     border-radius: 12px;
 
+    background: rgba(0, 0, 0, 0.7);
+
+    text-align: center;
     font-size: 15px;
+}
+
+/* =========================
+   Controls
+   ========================= */
+
+.controls {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: 30px;
+
+    display: flex;
+    justify-content: center;
+
+    z-index: 10;
+}
+
+.button {
+    min-width: 160px;
+
+    padding: 14px 24px;
+
+    border: 0;
+    border-radius: 999px;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+.button.primary {
+    background: #fff;
+    color: #000;
+}
+
+.button.secondary {
+    background: #222;
+    color: #fff;
+}
+
+/* =========================
+   Preview
+   ========================= */
+
+.preview-container {
+    width: 100%;
+    height: 100%;
+
+    padding: 30px 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 20px;
+}
+
+.preview-container h1 {
+    margin: 0;
+
+    font-size: 22px;
 
     text-align: center;
 }
 
-/* Buttons */
-
-button {
-    position: absolute;
-
-    left: 50%;
-    transform: translateX(-50%);
-
-    z-index: 20;
-
-    border: none;
-
-    border-radius: 999px;
-
-    padding: 15px 30px;
-
-    font-size: 16px;
-    font-weight: bold;
-
-    cursor: pointer;
-}
-
-#startCamera {
-    bottom: 30px;
-
-    background: white;
-    color: black;
-}
-
-#captureButton {
-    position: absolute;
-    left: 50%;
-    bottom: 30px;
-    transform: translateX(-50%);
-
-    z-index: 100;
-
+#previewImage {
     display: block;
 
-    background: white;
-    color: black;
+    width: 100%;
+    max-width: 700px;
+    max-height: 55vh;
 
-    min-width: 150px;
+    object-fit: contain;
+
+    border-radius: 12px;
+
+    background: #111;
 }
 
-#captureButton:disabled {
-    opacity: 0.5;
+.preview-actions {
+    display: flex;
+    gap: 12px;
+
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* =========================
+   Utilities
+   ========================= */
+
+.hidden {
+    display: none !important;
 }
 
 #captureCanvas {
