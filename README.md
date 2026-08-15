@@ -2,14 +2,15 @@
 
 # QuikScan PNG
 
-QuikScan - OCR flex kad skana blo yumi
+QuikScan - OCR flex kad skana blo PNG
 
 WIP. Currently incomplete
 
 Access the app at [shipitandrei.github.io](https://shipitandrei.github.io)
-QuikScan uses OCR (Optical Character Recognition) to easily scan flex cards and top up in an instant!
 
-## QuikScan Roadmap
+QuikScan uses OCR (Optical Character Recognition) technologies to easily scan flex cards and top up in an instant.
+
+## Roadmap
 
 - [x] Implement Camera
 - [x] Implement Image Capture
