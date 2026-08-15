@@ -587,10 +587,11 @@ cropButton.addEventListener("click", async () => {
 
 
     console.log(
-        "Code i crop pinis."
-    );
-    runOCR();
-    try {
+    "Code i crop pinis."
+);
+
+try {
+
     const paddleResult =
         await runPPOCR(cropCanvas);
 
@@ -600,6 +601,7 @@ cropButton.addEventListener("click", async () => {
     );
 
 } catch (error) {
+
     console.error(
         "PaddleOCR failed:",
         error
