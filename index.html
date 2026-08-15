@@ -4,19 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#000000">
+
     <title>QuikScan</title>
+
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="/images/favicon-96x96.png?v=1" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=1" />
-    <link rel="shortcut icon" href="/images/favicon.ico?v=1" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=1" />
-    <meta name="apple-mobile-web-app-title" content="QuikScan" />
-    <link rel="manifest" href="/images/site.webmanifest?v=1" />
 </head>
 
 <body>
 
 <main class="scanner">
+
+    <!-- CAMERA -->
 
     <video id="camera" autoplay playsinline></video>
 
@@ -39,19 +37,72 @@
         Statim Kamera
     </button>
 
-    <button id="captureButton" disabled style="display: none;">
+    <button id="captureButton" disabled>
         📷 Skanim
     </button>
 
-    <div id="preview" class="preview">
-        <img id="previewImage" alt="Piksa bilong Flex kad">
 
-        <button id="retakeButton">
-            🔄 Kisim Gen
-        </button>
+    <!-- CAPTURE PREVIEW / CROP -->
+
+    <div id="preview" class="preview">
+
+        <p class="cropInstruction">
+            ✂️ Makim code tasol
+        </p>
+
+        <div id="cropArea" class="crop-area">
+
+            <img
+                id="previewImage"
+                alt="Piksa bilong Flex kad"
+            >
+
+            <div id="cropSelection" class="crop-selection">
+                <div class="crop-handle top-left"></div>
+                <div class="crop-handle top-right"></div>
+                <div class="crop-handle bottom-left"></div>
+                <div class="crop-handle bottom-right"></div>
+            </div>
+
+        </div>
+
+        <div class="cropButtons">
+
+            <button id="retakeButton">
+                🔄 Kisim Gen
+            </button>
+
+            <button id="cropButton">
+                ✂️ Cropim Code
+            </button>
+
+        </div>
+
     </div>
 
+
+    <!-- CROPPED RESULT -->
+
+    <div id="croppedPreview" class="cropped-preview">
+
+        <p>
+            Code bilong OCR:
+        </p>
+
+        <img
+            id="croppedImage"
+            alt="Cropped Flex code"
+        >
+
+        <button id="backToCropButton">
+            🔄 Cropim Gen
+        </button>
+
+    </div>
+
+
     <canvas id="captureCanvas"></canvas>
+    <canvas id="cropCanvas"></canvas>
 
 </main>
 
