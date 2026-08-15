@@ -614,13 +614,14 @@ backToCropButton.addEventListener(
     }
 );
 
+
 /* =========================
-   OCR
+   OCR - OCRAD
    ========================= */
 
-ocrButton.addEventListener("click", async () => {
+ocrButton.addEventListener("click", () => {
 
-    console.log("OCR i stat.");
+    console.log("OCRAD i stat.");
 
     if (!cropCanvas.width || !cropCanvas.height) {
 
@@ -634,154 +635,100 @@ ocrButton.addEventListener("click", async () => {
         return;
     }
 
+    if (typeof OCRAD !== "function") {
+
+        const message =
+            "OCRAD i no load. Plis checkim OCRAD script.";
+
+        console.error(message);
+
+        ocrStatus.textContent = message;
+
+        return;
+    }
+
     ocrButton.disabled = true;
 
     ocrStatus.textContent =
-        "OCR i stat...";
+        "OCR i wok...";
 
     ocrResult.value = "";
 
     console.log(
-        "OCR input:",
+        "OCRAD input:",
         `${cropCanvas.width} × ${cropCanvas.height}px`
     );
 
     try {
 
-        if (
-            typeof Tesseract === "undefined"
-        ) {
+        OCRAD(
+            cropCanvas,
+            {
+                numeric: true
+            },
+            function (result) {
 
-            throw new Error(
-                "Tesseract.js i no load. Checkim internet connection na Tesseract script."
-            );
-        }
+                console.log(
+                    "OCRAD raw result:",
+                    JSON.stringify(result)
+                );
 
-        console.log(
-            "Tesseract.js i stap."
-        );
+                const text =
+                    String(result || "")
+                        .replace(/\D/g, "");
 
-        console.log(
-            "OCR config: PSM 7, digits only."
-        );
+                console.log(
+                    "OCRAD cleaned result:",
+                    JSON.stringify(text)
+                );
 
-        const result =
-            await Tesseract.recognize(
-                cropCanvas,
-                "eng",
-                {
+                if (!text) {
 
-                    logger: message => {
+                    console.warn(
+                        "OCRAD i no painim wanpela digit."
+                    );
 
-                        console.log(
-                            "OCR:",
-                            message
-                        );
+                    ocrStatus.textContent =
+                        "OCR i no painim wanpela namba. Plis checkim crop na piksa.";
 
-                        if (
-                            message.status ===
-                            "recognizing text"
-                        ) {
+                    ocrButton.disabled = false;
 
-                            const percent =
-                                Math.round(
-                                    message.progress *
-                                    100
-                                );
-
-                            ocrStatus.textContent =
-                                `OCR i wok... ${percent}%`;
-                        }
-                    },
-
-                    tessedit_pageseg_mode:
-                        "7",
-
-                    tessedit_char_whitelist:
-                        "0123456789"
+                    return;
                 }
-            );
 
+                ocrResult.value =
+                    text;
 
-        console.log(
-            "Tesseract i pinis."
-        );
+                ocrStatus.textContent =
+                    `OCR i painim ${text.length} digit. Plis checkim code na stretim sapos em rong.`;
 
-        console.log(
-            "Raw OCR result:",
-            JSON.stringify(
-                result.data.text
-            )
-        );
+                console.log(
+                    `OCRAD i painim ${text.length} digit:`,
+                    text
+                );
 
-
-        const text =
-            result.data.text
-                .replace(/\D/g, "");
-
-
-        console.log(
-            "Cleaned OCR result:",
-            JSON.stringify(text)
-        );
-
-
-        if (!text) {
-
-            console.warn(
-                "Tesseract i no painim wanpela digit."
-            );
-
-            ocrStatus.textContent =
-                "OCR i no painim ol namba. Plis checkim crop na tokples/contrast bilong piksa.";
-
-            return;
-        }
-
-
-        ocrResult.value =
-            text;
-
-        ocrStatus.textContent =
-            `OCR i painim ${text.length} digit. Plis checkim code na stretim sapos em rong.`;
-
-        console.log(
-            `OCR i painim ${text.length} digit:`,
-            text
+                ocrButton.disabled = false;
+            }
         );
 
     } catch (error) {
 
         console.error(
-            "OCR FAILED:",
+            "OCRAD error:",
             error
         );
 
         console.error(
-            "Error name:",
-            error?.name
-        );
-
-        console.error(
-            "Error message:",
-            error?.message
+            "OCRAD error string:",
+            String(error)
         );
 
         ocrStatus.textContent =
-            `OCR i fail: ${error?.message || "Unknown error"}`;
-
-    } finally {
+            `OCR i fail: ${error?.message || String(error)}`;
 
         ocrButton.disabled = false;
-
-        console.log(
-            "OCR process i pinis."
-        );
     }
 });
-
-
-
 /* =========================
    CONFIRM OCR
    ========================= */
