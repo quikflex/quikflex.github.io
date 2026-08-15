@@ -1,5 +1,12 @@
 {
+  "name": "quikscan",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
   "dependencies": {
-    "@paddleocr/paddleocr-js": "^0.4.2"
+    "@paddleocr/paddleocr-js": "0.4.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
   }
 }
