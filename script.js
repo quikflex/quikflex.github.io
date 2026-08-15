@@ -730,186 +730,206 @@ async function initializeOCR() {
 
 
 /* =========================
-   OCR
+   OCR - TESSERACT
    ========================= */
+
+/*
+ * Upscale the cropped image before OCR.
+ *
+ * Tesseract performs much better when small digits
+ * have more pixels to work with.
+ */
+
+function upscaleCanvas(sourceCanvas, scale = 3) {
+
+    const canvas =
+        document.createElement("canvas");
+
+    canvas.width =
+        sourceCanvas.width * scale;
+
+    canvas.height =
+        sourceCanvas.height * scale;
+
+    const context =
+        canvas.getContext("2d");
+
+    /*
+     * Keep the original pixels sharp.
+     */
+
+    context.imageSmoothingEnabled = false;
+
+    context.drawImage(
+        sourceCanvas,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    return canvas;
+}
+
 
 ocrButton.addEventListener(
     "click",
     async () => {
 
-        console.log(
-            "RapidOCR i stat."
-        );
-
+        console.log("OCR i stat.");
 
         if (
             !cropCanvas.width ||
             !cropCanvas.height
         ) {
 
-            const message =
-                "OCR i no inap stat: crop image i no stap.";
-
-            console.error(
-                message
+            alert(
+                "No gat crop image."
             );
-
-            ocrStatus.textContent =
-                message;
 
             return;
         }
 
-
-        ocrButton.disabled =
-            true;
+        ocrButton.disabled = true;
 
         ocrStatus.textContent =
-            "RapidOCR i wok...";
+            "OCR i wok...";
 
-        ocrResult.value =
-            "";
-
+        ocrResult.value = "";
 
         console.log(
-            "OCR input:",
+            "Original OCR input:",
             `${cropCanvas.width} × ${cropCanvas.height}px`
         );
 
-
-        const started =
-            performance.now();
-
-
         try {
 
-            await initializeOCR();
+            /*
+             * Upscale the image 3×.
+             */
 
+            const ocrImage =
+                upscaleCanvas(
+                    cropCanvas,
+                    3
+                );
 
             console.log(
-                "RapidOCR inference i stat..."
+                "Upscaled OCR input:",
+                `${ocrImage.width} × ${ocrImage.height}px`
             );
 
+            /*
+             * Send the enlarged image to Tesseract.
+             */
 
             const result =
-                await rapidOCR.processImage(
-                    cropCanvas
+                await Tesseract.recognize(
+                    ocrImage,
+                    "eng",
+                    {
+                        logger: message => {
+
+                            console.log(
+                                "OCR:",
+                                message
+                            );
+
+                            if (
+                                message.status ===
+                                "recognizing text"
+                            ) {
+
+                                const percent =
+                                    Math.round(
+                                        message.progress * 100
+                                    );
+
+                                ocrStatus.textContent =
+                                    `OCR i wok... ${percent}%`;
+                            }
+                        }
+                    }
                 );
 
 
-            const elapsed =
-                Math.round(
-                    performance.now() -
-                    started
-                );
+            /*
+             * Get the raw OCR result.
+             */
 
-
-            console.log(
-                "RapidOCR result:",
-                result
-            );
+            const rawText =
+                result.data.text;
 
             console.log(
-                `RapidOCR elapsed: ${elapsed}ms`
+                "OCR raw result:",
+                rawText
             );
 
 
-            let rawText =
-                "";
+            /*
+             * Flex codes are numbers.
+             *
+             * Remove everything except digits.
+             */
 
-
-            if (
-                Array.isArray(result)
-            ) {
-
-                rawText =
-                    result
-                        .map(
-                            item =>
-                                item.text || ""
-                        )
-                        .join(" ");
-
-            } else if (
-                result?.text
-            ) {
-
-                rawText =
-                    result.text;
-            }
-
-
-            console.log(
-                "RapidOCR raw text:",
-                JSON.stringify(rawText)
-            );
-
-
-            const digits =
+            const text =
                 rawText.replace(
                     /\D/g,
                     ""
                 );
 
-
             console.log(
-                "RapidOCR cleaned:",
-                JSON.stringify(digits)
+                "Cleaned OCR result:",
+                text
             );
 
 
-            if (!digits) {
+            if (!text) {
 
                 ocrStatus.textContent =
-                    `RapidOCR i pinis (${elapsed}ms) tasol em i no painim wanpela namba.`;
+                    "OCR i no painim code.";
 
                 console.warn(
-                    "RapidOCR completed with zero digits."
+                    "OCR completed but found no digits."
                 );
 
                 return;
             }
 
 
-            ocrResult.value =
-                digits;
+            /*
+             * Put the cleaned number into
+             * the result field.
+             */
 
+            ocrResult.value =
+                text;
 
             ocrStatus.textContent =
-                `RapidOCR i painim ${digits.length} digit. Plis checkim code.`;
-
+                "Checkim code na stret.";
 
             console.log(
-                `RapidOCR i painim ${digits.length} digit:`,
-                digits
+                "Final Flex code:",
+                text
             );
 
         } catch (error) {
 
             console.error(
-                "RapidOCR error:",
+                "OCR error:",
                 error
             );
 
-            console.error(
-                "RapidOCR error string:",
-                String(error)
-            );
-
             ocrStatus.textContent =
-                `RapidOCR i fail: ${
-                    error?.message ||
-                    String(error)
-                }`;
+                "OCR i gat problem.";
+
+            alert(
+                "OCR i no inap wok."
+            );
 
         } finally {
 
-            ocrButton.disabled =
-                false;
-
-            console.log(
-                "RapidOCR process i pinis."
-            );
+            ocrButton.disabled = false;
         }
     }
 );
