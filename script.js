@@ -29,6 +29,8 @@ startButton.addEventListener("click", async () => {
 
         captureButton.disabled = false;
 
+        captureButton.style.display = "block";
+
         console.log("Kamera i wok.");
 
     } catch (error) {
