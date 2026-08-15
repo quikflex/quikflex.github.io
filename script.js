@@ -1,3 +1,5 @@
+import { runPPOCR } from "./ocr/ppocr.js";
+
 const video = document.getElementById("camera");
 
 const startButton =
@@ -588,6 +590,21 @@ cropButton.addEventListener("click", () => {
         "Code i crop pinis."
     );
     runOCR();
+    try {
+    const paddleResult =
+        await runPPOCR(cropCanvas);
+
+    console.log(
+        "PADDLE RESULT:",
+        paddleResult
+    );
+
+} catch (error) {
+    console.error(
+        "PaddleOCR failed:",
+        error
+    );
+}
 });
 
 
