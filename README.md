@@ -19,5 +19,5 @@ QuikFlex uses AI (Artificial Intelligence) and OCD (Optical Character Recognitio
 - [x] Implement Automatic Vodafone & Digicel detection
 - [x] Implement USSD
 - [x] Minimize amount of clicks
-- [ ] Offline support 
+- [x] Offline support 
 - [ ] Make app prettier
