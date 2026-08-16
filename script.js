@@ -47,6 +47,8 @@ const ocrResult =
 const confirmButton =
     document.getElementById("confirmButton");
 
+const backToCropButton =
+    document.getElementById("backToCropButton");
 
 /* =========================
    CAMERA
