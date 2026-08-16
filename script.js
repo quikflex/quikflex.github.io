@@ -8,9 +8,6 @@ import { PaddleOCR } from "@paddleocr/paddleocr-js";
 const video =
     document.getElementById("camera");
 
-const startButton =
-    document.getElementById("startCamera");
-
 const captureButton =
     document.getElementById("captureButton");
 
@@ -57,55 +54,55 @@ const backToCropButton =
 let cameraStream = null;
 
 
-startButton.addEventListener(
-    "click",
-    async () => {
+async function startCamera() {
+
+    console.log(
+        "Statim kamera..."
+    );
+
+    try {
+
+        cameraStream =
+            await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: "environment"
+                },
+                audio: false
+            });
+
+        video.srcObject =
+            cameraStream;
+
+        captureButton.disabled =
+            false;
+
+        captureButton.style.display =
+            "block";
 
         console.log(
-            "Camera button i press."
+            "Kamera i wok."
         );
 
-        try {
+    } catch (error) {
 
-            cameraStream =
-                await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: "environment"
-                    },
-                    audio: false
-                });
+        console.error(
+            "Camera error:",
+            error
+        );
 
-            video.srcObject =
-                cameraStream;
-
-            startButton.style.display =
-                "none";
-
-            captureButton.disabled =
-                false;
-
-            captureButton.style.display =
-                "block";
-
-            console.log(
-                "Kamera i wok."
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Camera error:",
-                error
-            );
-
-            alert(
-                "Kamera i no inap. Plis checkim permission."
-            );
-        }
+        alert(
+            "Kamera i no inap. Plis checkim permission."
+        );
     }
-);
+}
 
 
+/*
+ * Start camera automatically
+ * when QuikScan opens.
+ */
+
+startCamera();
 /* =========================
    CAPTURE
    ========================= */
