@@ -1,6 +1,9 @@
 {
   "name": "QuikFlex",
   "short_name": "QuikFlex",
+  "id": "/app.html",
+  "start_url": "/app.html",
+  "scope": "/",
   "icons": [
     {
       "src": "/images/web-app-manifest-192x192.png?v=20260816",
