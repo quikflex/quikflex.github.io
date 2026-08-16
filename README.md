@@ -19,4 +19,5 @@ QuikScan uses OCR (Optical Character Recognition) technologies to easily scan fl
 - [ ] Clean up OCR
 - [ ] Implement Automatic Vodafone & Digicel detection
 - [ ] Implement USSD
+- [ ] Minimize amount of clicks
 - [ ] Make app prettier
