@@ -216,34 +216,42 @@ async function getPaddleOCR() {
 
 
     paddleOCR =
-        await PaddleOCR.create({
+    await PaddleOCR.create({
 
-            textDetectionModelName:
-                "PP-OCRv6_tiny_det",
+        textDetectionModelName:
+            "PP-OCRv6_tiny_det",
 
-            textRecognitionModelName:
-                "PP-OCRv6_tiny_rec",
+        textDetectionModelAsset: {
+            url:
+                "/ocr/ppocrv6-tiny-det.tar"
+        },
 
-            /*
-             * Worker disabled because it
-             * caused "OCR worker failed".
-             */
+        textRecognitionModelName:
+            "PP-OCRv6_tiny_rec",
 
-            worker: false,
+        textRecognitionModelAsset: {
+            url:
+                "/ocr/ppocrv6-tiny-rec.tar"
+        },
 
-            ortOptions: {
-                backend: "wasm",
+        worker: false,
+
+        ortOptions: {
+            backend: "wasm",
 
             wasmPaths: {
-                mjs: "/ocr/wasm/ort-wasm-simd-threaded.mjs",
-                wasm: "/ocr/wasm/ort-wasm-simd-threaded.wasm"
-},
+                mjs:
+                    "/ocr/wasm/ort-wasm-simd-threaded.mjs",
 
-                numThreads: 2,
+                wasm:
+                    "/ocr/wasm/ort-wasm-simd-threaded.wasm"
+            },
 
-                simd: true
-            }
-        });
+            numThreads: 2,
+
+            simd: true
+        }
+    });
 
 
     console.log(
