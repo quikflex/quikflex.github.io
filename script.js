@@ -234,8 +234,8 @@ async function getPaddleOCR() {
             ortOptions: {
                 backend: "wasm",
 
-                wasmPaths:
-                    "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/",
+            wasmPaths:
+                "/ocr/wasm/",
 
                 numThreads: 2,
 
