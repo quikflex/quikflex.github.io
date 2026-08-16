@@ -89,7 +89,34 @@
 
 </main>
 
-
+<script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener(
+            "load",
+            () => {
+                navigator.serviceWorker.register(
+                    "/service-worker.js"
+                )
+                .then(
+                    registration => {
+                        console.log(
+                            "QuikScan offline mode ready.",
+                            registration.scope
+                        );
+                    }
+                )
+                .catch(
+                    error => {
+                        console.error(
+                            "Service worker failed:",
+                            error
+                        );
+                    }
+                );
+            }
+        );
+    }
+</script>
 <script type="module" src="script.bundle.js"></script>
 
 </body>
