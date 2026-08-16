@@ -703,7 +703,7 @@ cropButton.addEventListener(
 
 
 /* =========================
-   CONFIRM OCR
+   CONFIRM OCR / USSD
    ========================= */
 
 confirmButton.addEventListener(
@@ -728,22 +728,121 @@ confirmButton.addEventListener(
         }
 
 
+        let ussd = "";
+        let carrier = "";
+
+
+        /*
+         * Digicel PNG Flex cards
+         * have 13-digit voucher numbers.
+         */
+
+        if (code.length === 13) {
+
+            carrier =
+                "Digicel";
+
+            ussd =
+                `*121*${code}#`;
+
+        }
+
+
+        /*
+         * Vodafone PNG TopUp cards
+         * have 15-digit voucher numbers.
+         */
+
+        else if (code.length === 15) {
+
+            carrier =
+                "Vodafone";
+
+            ussd =
+                `*121*${code}#`;
+
+        }
+
+
+        /*
+         * Anything else is probably
+         * an OCR mistake.
+         */
+
+        else {
+
+            alert(
+                "Code i mas 13 digits (Digicel) or 15 digits (Vodafone)."
+            );
+
+            return;
+        }
+
+
         console.log(
-            "Confirmed Flex code:",
-            code
+            "Carrier:",
+            carrier
+        );
+
+        console.log(
+            "USSD:",
+            ussd
         );
 
 
         /*
-         * USSD will eventually happen here.
+         * Show what QuikScan detected
+         * before opening the dialer.
          */
 
-        alert(
-            `Flex code: ${code}`
+        ocrStatus.textContent =
+            `${carrier} detected.`;
+
+        confirmButton.disabled =
+            true;
+
+
+        /*
+         * Open the phone dialer with
+         * the USSD code.
+         *
+         * # must be URL encoded as %23.
+         */
+
+        const telURI =
+            `tel:${ussd.replace(
+                "#",
+                "%23"
+            )}`;
+
+
+        window.location.href =
+            telURI;
+
+
+        /*
+         * Re-enable the button shortly
+         * afterward in case the phone
+         * does not open the dialer.
+         */
+
+        setTimeout(
+            () => {
+
+                confirmButton.disabled =
+                    false;
+
+            },
+            2000
+        );
+
+
+        console.log(
+            "Opening USSD:",
+            telURI
         );
     }
 );
-
 /* =========================
    RETAKE FROM OCR SCREEN
    ========================= */
