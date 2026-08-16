@@ -234,8 +234,10 @@ async function getPaddleOCR() {
             ortOptions: {
                 backend: "wasm",
 
-            wasmPaths:
-                "/ocr/wasm/",
+            wasmPaths: {
+                mjs: "/ocr/wasm/ort-wasm-simd-threaded.mjs",
+                wasm: "/ocr/wasm/ort-wasm-simd-threaded.wasm"
+},
 
                 numThreads: 2,
 
