@@ -29,9 +29,6 @@ const retakeButton =
 const cropButton =
     document.getElementById("cropButton");
 
-const cropArea =
-    document.getElementById("cropArea");
-
 const cropCanvas =
     document.getElementById("cropCanvas");
 
@@ -128,14 +125,17 @@ captureButton.addEventListener(
             return;
         }
 
+
         canvas.width =
             video.videoWidth;
 
         canvas.height =
             video.videoHeight;
 
+
         const context =
             canvas.getContext("2d");
+
 
         context.drawImage(
             video,
@@ -145,11 +145,6 @@ captureButton.addEventListener(
             canvas.height
         );
 
-        previewImage.src =
-            canvas.toDataURL(
-                "image/jpeg",
-                0.95
-            );
 
         previewImage.onload =
             () => {
@@ -165,6 +160,13 @@ captureButton.addEventListener(
                     "Piksa i kisim pinis."
                 );
             };
+
+
+        previewImage.src =
+            canvas.toDataURL(
+                "image/jpeg",
+                0.95
+            );
     }
 );
 
@@ -220,9 +222,11 @@ async function getPaddleOCR() {
         return paddleOCR;
     }
 
+
     console.log(
         "PaddleOCR i load..."
     );
+
 
     ocrStatus.textContent =
         "OCR i load...";
@@ -237,7 +241,11 @@ async function getPaddleOCR() {
             textRecognitionModelName:
                 "PP-OCRv6_tiny_rec",
 
-            // run WITHOUT a web worker to avoid "OCR worker failed" errors
+            /*
+             * Worker disabled because it
+             * caused "OCR worker failed".
+             */
+
             worker: false,
 
             ortOptions: {
@@ -257,12 +265,13 @@ async function getPaddleOCR() {
         "PaddleOCR i redi."
     );
 
+
     return paddleOCR;
 }
 
 
 /* =========================
-   AUTOMATIC FRAME CROP
+   AUTOMATIC VIEWFINDER CROP
    ========================= */
 
 function createFrameCrop() {
@@ -278,40 +287,120 @@ function createFrameCrop() {
     }
 
 
-    const imageRect =
-        previewImage.getBoundingClientRect();
+    /*
+     * The camera uses:
+     *
+     * object-fit: cover
+     *
+     * Therefore the visible camera
+     * image may be cropped on the
+     * sides or top/bottom.
+     *
+     * We reproduce that calculation
+     * against the captured image.
+     */
+
+
+    const videoRect =
+        video.getBoundingClientRect();
+
+
+    const frame =
+        document.querySelector(
+            ".scan-frame"
+        );
+
 
     const frameRect =
-        cropArea.getBoundingClientRect();
+        frame.getBoundingClientRect();
 
 
-    const scaleX =
-        canvas.width /
-        imageRect.width;
+    const videoWidth =
+        video.videoWidth;
 
-    const scaleY =
-        canvas.height /
-        imageRect.height;
+    const videoHeight =
+        video.videoHeight;
 
+
+    const containerWidth =
+        videoRect.width;
+
+    const containerHeight =
+        videoRect.height;
+
+
+    /*
+     * Scale used by object-fit: cover.
+     */
+
+    const scale =
+        Math.max(
+            containerWidth / videoWidth,
+            containerHeight / videoHeight
+        );
+
+
+    /*
+     * Size of the complete camera
+     * image after scaling.
+     */
+
+    const displayedWidth =
+        videoWidth * scale;
+
+    const displayedHeight =
+        videoHeight * scale;
+
+
+    /*
+     * object-position is center,
+     * so calculate the hidden area.
+     */
+
+    const offsetX =
+        (displayedWidth -
+            containerWidth) / 2;
+
+    const offsetY =
+        (displayedHeight -
+            containerHeight) / 2;
+
+
+    /*
+     * Convert the viewfinder's
+     * screen coordinates into
+     * coordinates on the original
+     * camera frame.
+     */
 
     let sourceX =
-        (frameRect.left -
-            imageRect.left) *
-        scaleX;
+        (
+            frameRect.left -
+            videoRect.left +
+            offsetX
+        ) / scale;
+
 
     let sourceY =
-        (frameRect.top -
-            imageRect.top) *
-        scaleY;
+        (
+            frameRect.top -
+            videoRect.top +
+            offsetY
+        ) / scale;
+
 
     let sourceWidth =
-        frameRect.width *
-        scaleX;
+        frameRect.width / scale;
+
 
     let sourceHeight =
-        frameRect.height *
-        scaleY;
+        frameRect.height / scale;
 
+
+    /*
+     * Keep everything inside
+     * the captured image.
+     */
 
     sourceX =
         Math.max(
@@ -322,6 +411,7 @@ function createFrameCrop() {
             )
         );
 
+
     sourceY =
         Math.max(
             0,
@@ -331,11 +421,13 @@ function createFrameCrop() {
             )
         );
 
+
     sourceWidth =
         Math.min(
             sourceWidth,
             canvas.width - sourceX
         );
+
 
     sourceHeight =
         Math.min(
@@ -344,8 +436,13 @@ function createFrameCrop() {
         );
 
 
+    /*
+     * Create cropped image.
+     */
+
     cropCanvas.width =
         Math.round(sourceWidth);
+
 
     cropCanvas.height =
         Math.round(sourceHeight);
@@ -353,6 +450,7 @@ function createFrameCrop() {
 
     const context =
         cropCanvas.getContext("2d");
+
 
     context.drawImage(
         canvas,
@@ -377,8 +475,19 @@ function createFrameCrop() {
 
 
     console.log(
-        "Automatic frame crop:",
+        "Viewfinder crop:",
         `${cropCanvas.width} × ${cropCanvas.height}px`
+    );
+
+
+    console.log(
+        "Crop source:",
+        {
+            x: sourceX,
+            y: sourceY,
+            width: sourceWidth,
+            height: sourceHeight
+        }
     );
 }
 
@@ -409,6 +518,7 @@ async function runOCR() {
 
     ocrStatus.textContent =
         "OCR i wok...";
+
 
     ocrResult.value =
         "";
@@ -489,6 +599,7 @@ async function runOCR() {
         ocrResult.value =
             text;
 
+
         ocrStatus.textContent =
             "Checkim code na stret.";
 
@@ -560,6 +671,7 @@ cropButton.addEventListener(
                 "active"
             );
 
+
             croppedPreview.classList.add(
                 "active"
             );
@@ -579,6 +691,7 @@ cropButton.addEventListener(
                 "Automatic OCR error:",
                 error
             );
+
 
             ocrStatus.textContent =
                 "OCR i no inap wok.";
