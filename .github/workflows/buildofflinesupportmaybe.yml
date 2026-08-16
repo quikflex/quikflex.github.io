@@ -1,4 +1,4 @@
-name: Build and Deploy QuikScan Offline
+name: Build and Deploy QuikScan offline
 
 on:
   push:
@@ -31,24 +31,38 @@ jobs:
 
       - name: Prepare ONNX Runtime WASM
         run: |
-          echo "Finding ONNX Runtime Web..."
+          echo "Locating ONNX Runtime Web..."
 
-          ORT_DIR=$(dirname "$(find node_modules -path '*/onnxruntime-web/package.json' -print -quit)")
+          ORT_PACKAGE=$(find node_modules -path '*/onnxruntime-web/package.json' -print -quit)
 
-          if [ -z "$ORT_DIR" ] || [ "$ORT_DIR" = "." ]; then
-            echo "ERROR: Could not find onnxruntime-web"
+          if [ -z "$ORT_PACKAGE" ]; then
+            echo "ERROR: onnxruntime-web package not found."
             exit 1
           fi
 
-          echo "Found ONNX Runtime at:"
+          ORT_DIR=$(dirname "$ORT_PACKAGE")
+
+          echo "ONNX Runtime found at:"
           echo "$ORT_DIR"
+
+          echo "Available files:"
+          ls -lah "$ORT_DIR/dist"
 
           mkdir -p ocr/wasm
 
           cp "$ORT_DIR"/dist/*.wasm ocr/wasm/
 
-          echo "Copied WASM files:"
-          ls -lh ocr/wasm/
+          echo "Final WASM directory:"
+          ls -lah ocr/wasm
+
+          WASM_COUNT=$(find ocr/wasm -name "*.wasm" | wc -l)
+
+          if [ "$WASM_COUNT" -eq 0 ]; then
+            echo "ERROR: No WASM files were copied!"
+            exit 1
+          fi
+
+          echo "Successfully copied $WASM_COUNT WASM files."
 
       - name: Build QuikScan
         run: |
@@ -60,18 +74,31 @@ jobs:
             --external:path \
             --outfile=script.bundle.js
 
-      - name: Verify build files
+      - name: Verify build
         run: |
           echo "Checking required files..."
 
           test -f index.html
           test -f script.bundle.js
+          test -f style.css
+          test -d images
           test -d ocr
           test -d ocr/wasm
 
-          echo "WASM files:"
-          ls -lh ocr/wasm/
+          WASM_COUNT=$(find ocr/wasm -name "*.wasm" | wc -l)
 
+          if [ "$WASM_COUNT" -eq 0 ]; then
+            echo "ERROR: ocr/wasm contains no WASM files!"
+            exit 1
+          fi
+
+          echo ""
+          echo "Required files found."
+          echo ""
+          echo "WASM files:"
+          find ocr/wasm -maxdepth 1 -type f -printf '%f\n'
+
+          echo ""
           echo "Build successful."
 
       - name: Configure GitHub Pages
@@ -84,7 +111,6 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-
     needs: build
 
     environment:
