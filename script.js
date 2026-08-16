@@ -90,6 +90,15 @@ startButton.addEventListener(
             console.log(
                 "Kamera i wok."
             );
+           
+           getPaddleOCR().catch(
+    error => {
+        console.error(
+            "PaddleOCR preload failed:",
+            error
+        );
+    }
+);
 
         } catch (error) {
 
