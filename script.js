@@ -14,18 +14,6 @@ const captureButton =
 const canvas =
     document.getElementById("captureCanvas");
 
-const preview =
-    document.getElementById("preview");
-
-const previewImage =
-    document.getElementById("previewImage");
-
-const retakeButton =
-    document.getElementById("retakeButton");
-
-const cropButton =
-    document.getElementById("cropButton");
-
 const cropCanvas =
     document.getElementById("cropCanvas");
 
@@ -46,6 +34,7 @@ const confirmButton =
 
 const backToCropButton =
     document.getElementById("backToCropButton");
+
 
 /* =========================
    CAMERA
@@ -103,13 +92,15 @@ async function startCamera() {
  */
 
 startCamera();
+
+
 /* =========================
    CAPTURE
    ========================= */
 
 captureButton.addEventListener(
     "click",
-    () => {
+    async () => {
 
         console.log(
             "Capture button i press."
@@ -145,65 +136,58 @@ captureButton.addEventListener(
         );
 
 
-        previewImage.onload =
-            () => {
-
-                preview.classList.add(
-                    "active"
-                );
-
-                captureButton.style.display =
-                    "none";
-
-                console.log(
-                    "Piksa i kisim pinis."
-                );
-            };
-
-
-        previewImage.src =
-            canvas.toDataURL(
-                "image/jpeg",
-                0.95
-            );
-    }
-);
-
-
-/* =========================
-   RETAKE
-   ========================= */
-
-retakeButton.addEventListener(
-    "click",
-    () => {
-
-        preview.classList.remove(
-            "active"
-        );
-
-        croppedPreview.classList.remove(
-            "active"
-        );
-
-        previewImage.src =
-            "";
-
-        croppedImage.src =
-            "";
-
-        ocrResult.value =
-            "";
-
-        ocrStatus.textContent =
-            "";
-
-        captureButton.style.display =
-            "block";
-
         console.log(
-            "Go bek long kamera."
+            "Piksa i kisim pinis."
         );
+
+
+        try {
+
+            /*
+             * Automatically crop the
+             * area inside the viewfinder.
+             */
+
+            createFrameCrop();
+
+
+            /*
+             * Hide the capture button
+             * while OCR is running.
+             */
+
+            captureButton.style.display =
+                "none";
+
+
+            /*
+             * Show the OCR/confirmation
+             * screen immediately.
+             */
+
+            croppedPreview.classList.add(
+                "active"
+            );
+
+
+            console.log(
+                "Code i crop pinis."
+            );
+
+
+            await runOCR();
+
+
+        } catch (error) {
+
+            console.error(
+                "Automatic OCR error:",
+                error
+            );
+
+            ocrStatus.textContent =
+                "OCR i no inap wok.";
+        }
     }
 );
 
@@ -295,7 +279,7 @@ function createFrameCrop() {
      * image may be cropped on the
      * sides or top/bottom.
      *
-     * We reproduce that calculation
+     * Reproduce that calculation
      * against the captured image.
      */
 
@@ -308,6 +292,14 @@ function createFrameCrop() {
         document.querySelector(
             ".scan-frame"
         );
+
+
+    if (!frame) {
+
+        throw new Error(
+            "Scan frame i no stap."
+        );
+    }
 
 
     const frameRect =
@@ -368,8 +360,7 @@ function createFrameCrop() {
     /*
      * Convert the viewfinder's
      * screen coordinates into
-     * coordinates on the original
-     * camera frame.
+     * original camera coordinates.
      */
 
     let sourceX =
@@ -639,67 +630,6 @@ async function runOCR() {
 
 
 /* =========================
-   AUTOMATIC OCR AFTER CAPTURE
-   ========================= */
-
-cropButton.addEventListener(
-    "click",
-    async () => {
-
-        console.log(
-            "Automatic frame crop i stat."
-        );
-
-
-        if (!previewImage.naturalWidth) {
-
-            alert(
-                "Piksa i no redi yet."
-            );
-
-            return;
-        }
-
-
-        try {
-
-            createFrameCrop();
-
-
-            preview.classList.remove(
-                "active"
-            );
-
-
-            croppedPreview.classList.add(
-                "active"
-            );
-
-
-            console.log(
-                "Code i crop pinis."
-            );
-
-
-            await runOCR();
-
-
-        } catch (error) {
-
-            console.error(
-                "Automatic OCR error:",
-                error
-            );
-
-
-            ocrStatus.textContent =
-                "OCR i no inap wok.";
-        }
-    }
-);
-
-
-/* =========================
    CONFIRM OCR / USSD
    ========================= */
 
@@ -787,11 +717,6 @@ confirmButton.addEventListener(
         );
 
 
-        /*
-         * Show what QuikScan detected
-         * before opening the dialer.
-         */
-
         ocrStatus.textContent =
             `${carrier} detected.`;
 
@@ -800,10 +725,7 @@ confirmButton.addEventListener(
 
 
         /*
-         * Open the phone dialer with
-         * the USSD code.
-         *
-         * # must be URL encoded as %23.
+         * # must be URL encoded.
          */
 
         const telURI =
@@ -816,12 +738,6 @@ confirmButton.addEventListener(
         window.location.href =
             telURI;
 
-
-        /*
-         * Re-enable the button shortly
-         * afterward in case the phone
-         * does not open the dialer.
-         */
 
         setTimeout(
             () => {
@@ -840,6 +756,8 @@ confirmButton.addEventListener(
         );
     }
 );
+
+
 /* =========================
    RETAKE FROM OCR SCREEN
    ========================= */
@@ -852,12 +770,6 @@ backToCropButton.addEventListener(
             "active"
         );
 
-        preview.classList.remove(
-            "active"
-        );
-
-        previewImage.src =
-            "";
 
         croppedImage.src =
             "";
@@ -868,14 +780,17 @@ backToCropButton.addEventListener(
         ocrStatus.textContent =
             "";
 
+
         cropCanvas.width =
             0;
 
         cropCanvas.height =
             0;
 
+
         captureButton.style.display =
             "block";
+
 
         console.log(
             "Kisim gen — go bek long kamera."
