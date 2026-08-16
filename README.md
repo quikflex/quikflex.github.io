@@ -2,7 +2,7 @@
 
 # QuikFlex PNG
 
-[Visit the app here](https://shipitandrei.github.io)
+[Visit the app here](https://quikflex.github.io)
 
 QuikFlex is an offline-first Progressive Web App (PWA) for scanning mobile recharge vouchers in Papua New Guinea.
 
