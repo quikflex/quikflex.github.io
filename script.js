@@ -745,7 +745,7 @@ confirmButton.addEventListener(
 );
 
 /* =========================
-   BACK TO CROP / RETAKE
+   RETAKE FROM OCR SCREEN
    ========================= */
 
 backToCropButton.addEventListener(
@@ -756,18 +756,33 @@ backToCropButton.addEventListener(
             "active"
         );
 
-        preview.classList.add(
+        preview.classList.remove(
             "active"
         );
 
-        ocrStatus.textContent =
+        previewImage.src =
+            "";
+
+        croppedImage.src =
             "";
 
         ocrResult.value =
             "";
 
+        ocrStatus.textContent =
+            "";
+
+        cropCanvas.width =
+            0;
+
+        cropCanvas.height =
+            0;
+
+        captureButton.style.display =
+            "block";
+
         console.log(
-            "Go bek long crop screen."
+            "Kisim gen — go bek long kamera."
         );
     }
 );
