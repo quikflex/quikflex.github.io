@@ -1,4 +1,4 @@
-name: Build and Deploy QuikScan
+name: Build and Deploy QuikScan Offline
 
 on:
   push:
