@@ -237,7 +237,8 @@ async function getPaddleOCR() {
             textRecognitionModelName:
                 "PP-OCRv6_tiny_rec",
 
-            worker: true,
+            // run WITHOUT a web worker to avoid "OCR worker failed" errors
+            worker: false,
 
             ortOptions: {
                 backend: "wasm",
