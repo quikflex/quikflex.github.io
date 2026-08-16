@@ -78,11 +78,6 @@ startButton.addEventListener(
             video.srcObject =
                 cameraStream;
 
-            // Start background preload after camera permission — doesn't block UI.
-            getPaddleOCR({ foreground: false }).catch(err => {
-                console.warn("Background PaddleOCR preload failed:", err);
-            });
-
             startButton.style.display =
                 "none";
 
@@ -221,158 +216,59 @@ retakeButton.addEventListener(
    ========================= */
 
 let paddleOCR = null;
-let paddleOCRCreating = false; // guard to prevent parallel create() calls
 
-// Loading UI helper: create a simple overlay element at runtime so we don't need
-// to modify HTML. The overlay is lightweight (no heavy assets) and is only
-// shown while preload/warm-up runs. This keeps the existing architecture
-// intact for offline/weak edge devices.
-function ensureOCRLoadingUI() {
-    if (document.getElementById("ocrLoadingOverlay")) return;
 
-    const overlay = document.createElement("div");
-    overlay.id = "ocrLoadingOverlay";
+async function getPaddleOCR() {
 
-    // Basic inline styles so it works without external CSS.
-    overlay.style.position = "fixed";
-    overlay.style.left = "0";
-    overlay.style.top = "0";
-    overlay.style.right = "0";
-    overlay.style.bottom = "0";
-    overlay.style.display = "flex";
-    overlay.style.alignItems = "center";
-    overlay.style.justifyContent = "center";
-    overlay.style.background = "rgba(0,0,0,0.6)";
-    overlay.style.color = "#fff";
-    overlay.style.fontFamily = "sans-serif";
-    overlay.style.fontSize = "16px";
-    overlay.style.zIndex = "9999";
-    overlay.style.backdropFilter = "blur(2px)";
-
-    const box = document.createElement("div");
-    box.style.display = "flex";
-    box.style.flexDirection = "column";
-    box.style.alignItems = "center";
-    box.style.gap = "10px";
-    box.style.padding = "18px 22px";
-    box.style.borderRadius = "8px";
-    box.style.background = "rgba(0,0,0,0.45)";
-
-    const spinner = document.createElement("div");
-    // small CSS spinner using borders
-    spinner.style.width = "36px";
-    spinner.style.height = "36px";
-    spinner.style.border = "4px solid rgba(255,255,255,0.15)";
-    spinner.style.borderTop = "4px solid #fff";
-    spinner.style.borderRadius = "50%";
-    spinner.style.animation = "ocr-spin 1s linear infinite";
-
-    // Keyframes — inject into a style tag if not present
-    if (!document.getElementById("ocrLoadingStyles")) {
-        const style = document.createElement("style");
-        style.id = "ocrLoadingStyles";
-        style.textContent = `@keyframes ocr-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`;
-        document.head.appendChild(style);
+    if (paddleOCR) {
+        return paddleOCR;
     }
 
-    const label = document.createElement("div");
-    label.id = "ocrLoadingLabel";
-    label.textContent = "Loading OCR — please wait...";
 
-    box.appendChild(spinner);
-    box.appendChild(label);
-    overlay.appendChild(box);
-    overlay.style.display = "none";
+    console.log(
+        "PaddleOCR i load..."
+    );
 
-    document.body.appendChild(overlay);
-}
 
-function showOCRLoading(text) {
-    ensureOCRLoadingUI();
-    const overlay = document.getElementById("ocrLoadingOverlay");
-    const label = document.getElementById("ocrLoadingLabel");
-    if (label && text) label.textContent = text;
-    overlay.style.display = "flex";
-}
+    ocrStatus.textContent =
+        "OCR i load...";
 
-function hideOCRLoading() {
-    const overlay = document.getElementById("ocrLoadingOverlay");
-    if (overlay) overlay.style.display = "none";
-}
 
-// getPaddleOCR: supports foreground=true to show a blocking loading UI (used
-// when the user explicitly tries to scan and background preload hasn't finished).
-// Background preload calls should pass { foreground: false } (or omit options)
-// so they don't block the UI on slow networks.
-async function getPaddleOCR(options = { foreground: false }) {
+    paddleOCR =
+        await PaddleOCR.create({
 
-    if (paddleOCR) return paddleOCR;
+            textDetectionModelName:
+                "PP-OCRv6_tiny_det",
 
-    // If a create() call is already in progress, wait briefly for it.
-    if (paddleOCRCreating) {
-        for (let i = 0; i < 50; i++) { // ~5s max wait
-            if (paddleOCR) return paddleOCR;
-            await new Promise(r => setTimeout(r, 100));
-        }
-    }
+            textRecognitionModelName:
+                "PP-OCRv6_tiny_rec",
 
-    const foreground = !!options.foreground;
+            /*
+             * Worker disabled because it
+             * caused "OCR worker failed".
+             */
 
-    if (foreground) {
-        try { showOCRLoading("Loading OCR — please wait..."); } catch (e) { /* ignore */ }
-        ocrStatus.textContent = "OCR i load...";
-    } else {
-        // background attempt: keep UI neutral
-        ocrStatus.textContent = "";
-    }
-
-    paddleOCRCreating = true;
-
-    try {
-        const instance = await PaddleOCR.create({
-            textDetectionModelName: "PP-OCRv6_tiny_det",
-            textRecognitionModelName: "PP-OCRv6_tiny_rec",
             worker: false,
+
             ortOptions: {
                 backend: "wasm",
-                // Use local hosted assets under /ocr/ per repo setup
-                wasmPaths: "/ocr/",
+
+                wasmPaths:
+                    "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/",
+
                 numThreads: 2,
+
                 simd: true
             }
         });
 
-        // Warm-up — non-fatal
-        try {
-            const warmupCanvas = document.createElement("canvas");
-            warmupCanvas.width = 32; warmupCanvas.height = 32;
-            const ctx = warmupCanvas.getContext("2d");
-            ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, 32, 32);
-            await instance.predict(warmupCanvas);
-        } catch (e) {
-            console.warn("PaddleOCR warmup failed (non-fatal):", e);
-        }
 
-        paddleOCR = instance;
-        ocrStatus.textContent = "OCR i redi.";
-        return paddleOCR;
+    console.log(
+        "PaddleOCR i redi."
+    );
 
-    } catch (err) {
-        console.error("PaddleOCR.create() failed:", err);
-        if (foreground) {
-            // foreground failure: rethrow so caller can show error/alert
-            throw err;
-        }
-        // background failure: keep app usable and allow future retries
-        ocrStatus.textContent = "OCR i no redi — will try when you scan.";
-        return null;
 
-    } finally {
-        paddleOCRCreating = false;
-        if (foreground) {
-            try { hideOCRLoading(); } catch (e) {}
-        }
-    }
+    return paddleOCR;
 }
 
 
@@ -632,24 +528,9 @@ async function runOCR() {
 
     try {
 
-        // Try background instance first; if not available do a foreground retry
-        let ocr = await getPaddleOCR({ foreground: false }).catch(() => null);
+        const ocr =
+            await getPaddleOCR();
 
-        if (!ocr) {
-            try {
-                // Foreground attempt — show overlay and wait for create()
-                showOCRLoading("Loading OCR — please wait...");
-                ocr = await getPaddleOCR({ foreground: true });
-            } catch (err) {
-                console.error("Foreground PaddleOCR create failed:", err);
-                ocrStatus.textContent = "OCR i no inap wok.";
-                hideOCRLoading();
-                alert("OCR i no redi yet. Plis try again or check network.");
-                return;
-            } finally {
-                hideOCRLoading();
-            }
-        }
 
         console.log(
             "Running PaddleOCR..."
