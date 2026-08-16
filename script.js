@@ -743,3 +743,31 @@ confirmButton.addEventListener(
         );
     }
 );
+
+/* =========================
+   BACK TO CROP / RETAKE
+   ========================= */
+
+backToCropButton.addEventListener(
+    "click",
+    () => {
+
+        croppedPreview.classList.remove(
+            "active"
+        );
+
+        preview.classList.add(
+            "active"
+        );
+
+        ocrStatus.textContent =
+            "";
+
+        ocrResult.value =
+            "";
+
+        console.log(
+            "Go bek long crop screen."
+        );
+    }
+);
