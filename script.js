@@ -217,6 +217,82 @@ retakeButton.addEventListener(
 
 let paddleOCR = null;
 
+// Loading UI helper: create a simple overlay element at runtime so we don't need
+// to modify HTML. The overlay is lightweight (no heavy assets) and is only
+// shown while preload/warm-up runs. This keeps the existing architecture
+// intact for offline/weak edge devices.
+function ensureOCRLoadingUI() {
+    if (document.getElementById("ocrLoadingOverlay")) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "ocrLoadingOverlay";
+
+    // Basic inline styles so it works without external CSS.
+    overlay.style.position = "fixed";
+    overlay.style.left = "0";
+    overlay.style.top = "0";
+    overlay.style.right = "0";
+    overlay.style.bottom = "0";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.background = "rgba(0,0,0,0.6)";
+    overlay.style.color = "#fff";
+    overlay.style.fontFamily = "sans-serif";
+    overlay.style.fontSize = "16px";
+    overlay.style.zIndex = "9999";
+    overlay.style.backdropFilter = "blur(2px)";
+
+    const box = document.createElement("div");
+    box.style.display = "flex";
+    box.style.flexDirection = "column";
+    box.style.alignItems = "center";
+    box.style.gap = "10px";
+    box.style.padding = "18px 22px";
+    box.style.borderRadius = "8px";
+    box.style.background = "rgba(0,0,0,0.45)";
+
+    const spinner = document.createElement("div");
+    // small CSS spinner using borders
+    spinner.style.width = "36px";
+    spinner.style.height = "36px";
+    spinner.style.border = "4px solid rgba(255,255,255,0.15)";
+    spinner.style.borderTop = "4px solid #fff";
+    spinner.style.borderRadius = "50%";
+    spinner.style.animation = "ocr-spin 1s linear infinite";
+
+    // Keyframes — inject into a style tag if not present
+    if (!document.getElementById("ocrLoadingStyles")) {
+        const style = document.createElement("style");
+        style.id = "ocrLoadingStyles";
+        style.textContent = `@keyframes ocr-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`;
+        document.head.appendChild(style);
+    }
+
+    const label = document.createElement("div");
+    label.id = "ocrLoadingLabel";
+    label.textContent = "Loading OCR — please wait...";
+
+    box.appendChild(spinner);
+    box.appendChild(label);
+    overlay.appendChild(box);
+    overlay.style.display = "none";
+
+    document.body.appendChild(overlay);
+}
+
+function showOCRLoading(text) {
+    ensureOCRLoadingUI();
+    const overlay = document.getElementById("ocrLoadingOverlay");
+    const label = document.getElementById("ocrLoadingLabel");
+    if (label && text) label.textContent = text;
+    overlay.style.display = "flex";
+}
+
+function hideOCRLoading() {
+    const overlay = document.getElementById("ocrLoadingOverlay");
+    if (overlay) overlay.style.display = "none";
+}
 
 async function getPaddleOCR() {
 
@@ -233,40 +309,78 @@ async function getPaddleOCR() {
     ocrStatus.textContent =
         "OCR i load...";
 
+    // Show a small loading UI while models and runtime initialize.
+    // We keep worker disabled and wasm backend to preserve the architecture
+    // suitable for offline/weak edge devices.
+    try {
+        showOCRLoading("Loading OCR models — this happens once");
+    } catch (e) {
+        // If DOM isn't ready for some reason, ignore overlay failure.
+        console.warn("Could not show OCR loading UI:", e);
+    }
 
-    paddleOCR =
-        await PaddleOCR.create({
+    try {
+        paddleOCR =
+            await PaddleOCR.create({
 
-            textDetectionModelName:
-                "PP-OCRv6_tiny_det",
+                textDetectionModelName:
+                    "PP-OCRv6_tiny_det",
 
-            textRecognitionModelName:
-                "PP-OCRv6_tiny_rec",
+                textRecognitionModelName:
+                    "PP-OCRv6_tiny_rec",
 
-            /*
-             * Worker disabled because it
-             * caused "OCR worker failed".
-             */
+                /*
+                 * Worker disabled because it
+                 * caused "OCR worker failed" and
+                 * to keep compatibility with
+                 * GitHub Pages / weak edge devices.
+                 */
 
-            worker: false,
+                worker: false,
 
-            ortOptions: {
-                backend: "wasm",
+                ortOptions: {
+                    backend: "wasm",
 
-                wasmPaths:
-                    "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/",
+                    wasmPaths:
+                        "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/",
 
-                numThreads: 2,
+                    numThreads: 2,
 
-                simd: true
-            }
-        });
+                    simd: true
+                }
+            });
 
+        console.log(
+            "PaddleOCR i redi."
+        );
 
-    console.log(
-        "PaddleOCR i redi."
-    );
+        // Warm-up: run a tiny prediction to initialize the runtime and JIT layers.
+        // This reduces the latency of the first real OCR pass.
+        try {
+            const warmupCanvas = document.createElement("canvas");
+            warmupCanvas.width = 32;
+            warmupCanvas.height = 32;
+            const ctx = warmupCanvas.getContext("2d");
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, warmupCanvas.width, warmupCanvas.height);
 
+            // Some environments may reject very small inputs; errors are non-fatal.
+            await paddleOCR.predict(warmupCanvas);
+            console.log("PaddleOCR warmup done");
+        } catch (e) {
+            console.warn("PaddleOCR warmup failed (non-fatal):", e);
+        }
+
+    } catch (error) {
+        console.error("PaddleOCR create() failed:", error);
+        // Ensure we hide the loading UI even on failure so the app stays usable.
+        hideOCRLoading();
+        ocrStatus.textContent = "OCR i no inap wok.";
+        throw error;
+    }
+
+    hideOCRLoading();
+    ocrStatus.textContent = "OCR i redi.";
 
     return paddleOCR;
 }
@@ -885,3 +999,15 @@ backToCropButton.addEventListener(
         );
     }
 );
+
+// Preload OCR on page load so the first user-initiated scan is fast.
+// We intentionally keep the same runtime options (worker: false, wasm)
+// to preserve compatibility with offline/weak edge devices.
+window.addEventListener("load", () => {
+    // Kick off model/download/initialization in background. The loading
+    // UI is shown from getPaddleOCR(). Any failures are logged but don't
+    // block the app.
+    getPaddleOCR().catch(err => {
+        console.warn("PaddleOCR preload failed:", err);
+    });
+});
