@@ -216,6 +216,7 @@ retakeButton.addEventListener(
    ========================= */
 
 let paddleOCR = null;
+let paddleOCRCreating = false; // guard to prevent parallel create() calls
 
 // Loading UI helper: create a simple overlay element at runtime so we don't need
 // to modify HTML. The overlay is lightweight (no heavy assets) and is only
@@ -300,6 +301,17 @@ async function getPaddleOCR() {
         return paddleOCR;
     }
 
+    // If a create() call is already in progress, wait for it instead of
+    // starting another one. This keeps parallel attempts from competing.
+    if (paddleOCRCreating) {
+        // poll until created or failed
+        for (let i = 0; i < 40; i++) { // ~4s max wait
+            if (paddleOCR) return paddleOCR;
+            await new Promise(r => setTimeout(r, 100));
+        }
+        // if still not available fall through and attempt create again
+    }
+
 
     console.log(
         "PaddleOCR i load..."
@@ -310,14 +322,22 @@ async function getPaddleOCR() {
         "OCR i load...";
 
     // Show a small loading UI while models and runtime initialize.
-    // We keep worker disabled and wasm backend to preserve the architecture
-    // suitable for offline/weak edge devices.
+    // We intentionally auto-hide the overlay after a short time so users aren't
+    // blocked by long downloads on weak connections. The download/initialization
+    // continues in the background.
     try {
         showOCRLoading("Loading OCR models — this happens once");
     } catch (e) {
-        // If DOM isn't ready for some reason, ignore overlay failure.
         console.warn("Could not show OCR loading UI:", e);
     }
+
+    paddleOCRCreating = true;
+    let createErr = null;
+
+    // auto-hide overlay quickly so it doesn't block the app on slow networks
+    const autoHideTimer = setTimeout(() => {
+        try { hideOCRLoading(); } catch (e) {}
+    }, 2500);
 
     try {
         paddleOCR =
@@ -355,7 +375,8 @@ async function getPaddleOCR() {
         );
 
         // Warm-up: run a tiny prediction to initialize the runtime and JIT layers.
-        // This reduces the latency of the first real OCR pass.
+        // This reduces the latency of the first real OCR pass. Failures are
+        // non-fatal.
         try {
             const warmupCanvas = document.createElement("canvas");
             warmupCanvas.width = 32;
@@ -364,25 +385,30 @@ async function getPaddleOCR() {
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, warmupCanvas.width, warmupCanvas.height);
 
-            // Some environments may reject very small inputs; errors are non-fatal.
             await paddleOCR.predict(warmupCanvas);
             console.log("PaddleOCR warmup done");
         } catch (e) {
             console.warn("PaddleOCR warmup failed (non-fatal):", e);
         }
 
+        // success
+        clearTimeout(autoHideTimer);
+        hideOCRLoading();
+        ocrStatus.textContent = "OCR i redi.";
+        paddleOCRCreating = false;
+        return paddleOCR;
+
     } catch (error) {
         console.error("PaddleOCR create() failed:", error);
-        // Ensure we hide the loading UI even on failure so the app stays usable.
+        createErr = error;
+        // Hide overlay and set a non-fatal status — don't throw so the app stays usable.
+        clearTimeout(autoHideTimer);
         hideOCRLoading();
-        ocrStatus.textContent = "OCR i no inap wok.";
-        throw error;
+        ocrStatus.textContent = "OCR i no redi — will try when you scan.";
+        paddleOCRCreating = false;
+        // Keep paddleOCR null; future calls will retry.
+        return null;
     }
-
-    hideOCRLoading();
-    ocrStatus.textContent = "OCR i redi.";
-
-    return paddleOCR;
 }
 
 
@@ -642,9 +668,25 @@ async function runOCR() {
 
     try {
 
-        const ocr =
-            await getPaddleOCR();
+        // Try to get an initialized OCR instance. If preload previously failed
+        // this will attempt to create it again. If getPaddleOCR returns null it
+        // means the preload/create failed — show the loading UI and retry once
+        // more while the user waits.
+        let ocr = await getPaddleOCR();
 
+        if (!ocr) {
+            // Show loading UI and attempt a foreground retry.
+            showOCRLoading("Loading OCR — please wait...");
+            ocr = await getPaddleOCR();
+            hideOCRLoading();
+
+            if (!ocr) {
+                // Still no OCR — inform the user and abort gracefully.
+                ocrStatus.textContent = "OCR i no inap wok.";
+                alert("OCR i no redi yet. Plis try again or check network.");
+                return;
+            }
+        }
 
         console.log(
             "Running PaddleOCR..."
