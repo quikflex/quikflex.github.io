@@ -3,6 +3,7 @@ const CACHE_NAME = "quikscan-v1";
 const ASSETS = [
     "/",
     "/index.html",
+    "/app.html",
     "/style.css",
     "/script.bundle.js",
 
