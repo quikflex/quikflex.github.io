@@ -15,23 +15,17 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: npm
 
       - name: Install dependencies
         run: npm install
 
-      - name: Find ONNX Runtime
+      - name: Inspect ONNX Runtime WASM
         run: |
-          echo "========================================"
-          echo "ONNX Runtime version"
-          echo "========================================"
-
+          echo "=== ONNX Runtime ==="
           npm ls onnxruntime-web || true
 
           echo ""
-          echo "========================================"
-          echo "WASM files"
-          echo "========================================"
+          echo "=== WASM FILES ==="
 
           find node_modules \
             -path "*/onnxruntime-web/dist/*.wasm" \
@@ -40,13 +34,9 @@ jobs:
             | sort
 
           echo ""
-          echo "========================================"
-          echo "WASM count"
-          echo "========================================"
+          echo "=== COUNT ==="
 
-          COUNT=$(find node_modules \
+          find node_modules \
             -path "*/onnxruntime-web/dist/*.wasm" \
             -type f \
-            | wc -l)
-
-          echo "$COUNT WASM files found."
+            | wc -l
