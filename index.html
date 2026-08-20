@@ -2,6 +2,7 @@
 <html lang="tpi">
 <head>
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
@@ -120,6 +121,35 @@
 
             font-size: 19px;
             line-height: 1.5;
+        }
+
+        .download-button {
+            display: inline-block;
+
+            margin-top: 24px;
+            padding: 14px 24px;
+
+            background: #fff;
+            color: #000;
+
+            border-radius: 14px;
+
+            font-size: 16px;
+            font-weight: 600;
+
+            text-decoration: none;
+
+            transition:
+                transform 0.15s ease,
+                opacity 0.15s ease;
+        }
+
+        .download-button:hover {
+            opacity: 0.9;
+        }
+
+        .download-button:active {
+            transform: scale(0.96);
         }
 
         .features {
@@ -261,6 +291,13 @@
     <p class="tagline">
         Skainim Flex card bilong yu na topap long sampela sekon tasol.
     </p>
+
+    <a
+        class="download-button"
+        href="https://github.com/quikflex/quikflex.github.io/releases/download/v1.0.0-release/QuikFlex.v1.0.0.apk"
+    >
+        Install APK
+    </a>
 
     <section
         id="iphoneInstructions"
