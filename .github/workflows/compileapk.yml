@@ -1,0 +1,95 @@
+name: Build QuikFlex APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Create TWA manifest
+        run: |
+          cat > twa-manifest.json <<'EOF'
+          {
+            "packageId": "com.quikflex.app",
+            "host": "quikflex.github.io",
+            "name": "QuikFlex",
+            "launcherName": "QuikFlex",
+            "display": "standalone",
+            "themeColor": "#f9f9f9",
+            "themeColorDark": "#000000",
+            "navigationColor": "#f9f9f9",
+            "navigationColorDark": "#000000",
+            "navigationDividerColor": "#00000000",
+            "backgroundColor": "#1fe009",
+            "enableNotifications": true,
+            "startUrl": "/app.html",
+            "iconUrl": "https://quikflex.github.io/images/web-app-manifest-512x512.png",
+            "maskableIconUrl": "https://quikflex.github.io/images/web-app-manifest-512x512.png",
+            "splashScreenFadeOutDuration": 300,
+            "signingKey": {
+              "path": "./android.keystore",
+              "alias": "quikflex"
+            },
+            "appVersionCode": 1,
+            "appVersion": "1.0.0",
+            "webManifestUrl": "https://quikflex.github.io/images/site.webmanifest",
+            "orientation": "default",
+            "minSdkVersion": 19,
+            "generatorApp": "Bubblewrap",
+            "shortcuts": [],
+            "features": {},
+            "alphaDependencies": {
+              "enabled": false
+            },
+            "isChromeOSOnly": false,
+            "isMetaQuest": false,
+            "additionalTrustedOrigins": []
+          }
+          EOF
+
+      - name: Generate Android project
+        run: bubblewrap update --manifest=twa-manifest.json --skipVersionUpgrade
+
+      - name: Create signing key
+        run: |
+          keytool -genkeypair \
+            -v \
+            -keystore android.keystore \
+            -alias quikflex \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass quikflex-build \
+            -keypass quikflex-build \
+            -dname "CN=QuikFlex, OU=QuikFlex, O=QuikFlex, C=PG"
+
+      - name: Build APK
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: quikflex-build
+          BUBBLEWRAP_KEY_PASSWORD: quikflex-build
+        run: bubblewrap build --manifest=twa-manifest.json --signingKeyPath=./android.keystore --signingKeyAlias=quikflex
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: QuikFlex-APK
+          path: app-release-signed.apk
