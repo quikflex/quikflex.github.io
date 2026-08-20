@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 permissions:
@@ -39,13 +38,29 @@ jobs:
             --external:path \
             --outfile=script.bundle.js
 
+      - name: Prepare Pages directory
+        run: |
+          mkdir -p _site/.well-known
+
+          # Copy the entire website
+          cp -r ./* _site/ 2>/dev/null || true
+
+          # Copy hidden files/directories explicitly
+          cp -r .well-known/* _site/.well-known/
+
+          echo "=== DEPLOYMENT CONTENTS ==="
+          find _site -maxdepth 3 -type f | sort
+
+          echo "=== ASSETLINKS ==="
+          cat _site/.well-known/assetlinks.json
+
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: .
+          path: _site
 
   deploy:
     runs-on: ubuntu-latest
