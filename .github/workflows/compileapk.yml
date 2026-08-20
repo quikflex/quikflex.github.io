@@ -17,13 +17,26 @@ jobs:
           node-version: 22
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
 
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
+
+      - name: Create signing key
+        run: |
+          keytool -genkeypair \
+            -v \
+            -keystore android.keystore \
+            -alias quikflex \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass quikflex-build \
+            -keypass quikflex-build \
+            -dname "CN=QuikFlex, OU=QuikFlex, O=QuikFlex, C=PG"
 
       - name: Create TWA manifest
         run: |
@@ -67,26 +80,20 @@ jobs:
           EOF
 
       - name: Generate Android project
-        run: bubblewrap update --manifest=twa-manifest.json --skipVersionUpgrade
-
-      - name: Create signing key
         run: |
-          keytool -genkeypair \
-            -v \
-            -keystore android.keystore \
-            -alias quikflex \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass quikflex-build \
-            -keypass quikflex-build \
-            -dname "CN=QuikFlex, OU=QuikFlex, O=QuikFlex, C=PG"
+          echo "n" | bubblewrap update \
+            --manifest=twa-manifest.json \
+            --skipVersionUpgrade
 
       - name: Build APK
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: quikflex-build
           BUBBLEWRAP_KEY_PASSWORD: quikflex-build
-        run: bubblewrap build --manifest=twa-manifest.json --signingKeyPath=./android.keystore --signingKeyAlias=quikflex
+        run: |
+          bubblewrap build \
+            --manifest=twa-manifest.json \
+            --signingKeyPath=./android.keystore \
+            --signingKeyAlias=quikflex
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
