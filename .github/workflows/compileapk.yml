@@ -1,43 +1,30 @@
 name: Build QuikFlex Android
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
+    name: Build APK and AAB
     runs-on: ubuntu-latest
 
-    container:
-      image: ghcr.io/googlechromelabs/bubblewrap:1.25.0
-
     steps:
-      # ─────────────────────────────────────────────
-      # Get the website
-      # ─────────────────────────────────────────────
+      # ---------------------------------------------------------
+      # CHECKOUT
+      # ---------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ─────────────────────────────────────────────
-      # Check the Bubblewrap container
-      # ─────────────────────────────────────────────
-      - name: Check Java and Bubblewrap
-        run: |
-          echo "=== JAVA ==="
-          java -version
-
-          echo "=== BUBBLEWRAP ==="
-          which bubblewrap
-
-          echo "=== BUBBLEWRAP CONFIG ==="
-          cat /root/.bubblewrap/config.json
-
-      # ─────────────────────────────────────────────
-      # Generate temporary signing key
-      # ─────────────────────────────────────────────
-      - name: Generate test keystore
+      # ---------------------------------------------------------
+      # CREATE TEST KEYSTORE
+      # ---------------------------------------------------------
+      # This is ONLY for development/testing.
+      # Replace it with the real production keystore later.
+      # ---------------------------------------------------------
+      - name: Create test keystore
         run: |
           keytool \
             -genkeypair \
@@ -53,17 +40,19 @@ jobs:
 
           echo "Test keystore created."
 
-      # ─────────────────────────────────────────────
-      # Create Bubblewrap manifest
-      # ─────────────────────────────────────────────
-      - name: Create TWA manifest
+      # ---------------------------------------------------------
+      # CREATE BUBBLEWRAP MANIFEST
+      # ---------------------------------------------------------
+      - name: Create Bubblewrap manifest
         run: |
           cat > twa-manifest.json <<'EOF'
           {
             "packageId": "com.quikflex.app",
             "host": "quikflex.github.io",
+
             "name": "QuikFlex",
             "launcherName": "QuikFlex",
+
             "display": "standalone",
 
             "themeColor": "#f9f9f9",
@@ -95,6 +84,7 @@ jobs:
             "webManifestUrl": "https://quikflex.github.io/images/site.webmanifest",
 
             "orientation": "default",
+
             "minSdkVersion": 19,
 
             "generatorApp": "Bubblewrap",
@@ -116,30 +106,64 @@ jobs:
           echo "Manifest created:"
           cat twa-manifest.json
 
-      # ─────────────────────────────────────────────
-      # Update Bubblewrap project
-      # ─────────────────────────────────────────────
-      - name: Update Bubblewrap project
+      # ---------------------------------------------------------
+      # BUBBLEWRAP
+      # ---------------------------------------------------------
+      #
+      # IMPORTANT:
+      # We deliberately run Bubblewrap INSIDE the official
+      # Bubblewrap Docker image, like WASudoku does.
+      #
+      # This avoids the interactive JDK/Android SDK setup that
+      # killed the previous workflow.
+      # ---------------------------------------------------------
+      - name: Build APK and AAB with Bubblewrap
         run: |
-          bubblewrap update \
-            --manifest=twa-manifest.json \
-            --skipVersionUpgrade
+          docker run \
+            --rm \
+            --entrypoint sh \
+            -e "BUBBLEWRAP_KEYSTORE_PASSWORD=android" \
+            -e "BUBBLEWRAP_KEY_PASSWORD=android" \
+            -v "${PWD}:/app" \
+            -w /app \
+            ghcr.io/googlechromelabs/bubblewrap:1.25.0 \
+            -c '
+              bubblewrap update &&
+              yes | bubblewrap build
+            '
 
-      # ─────────────────────────────────────────────
-      # Build Android APK
-      # ─────────────────────────────────────────────
-      - name: Build APK
+      # ---------------------------------------------------------
+      # SHOW OUTPUT
+      # ---------------------------------------------------------
+      - name: Show generated files
         run: |
-          bubblewrap build \
-            --config=twa-manifest.json
+          echo "=== BUILD OUTPUT ==="
+          ls -lah
 
-      # ─────────────────────────────────────────────
-      # Upload APK
-      # ─────────────────────────────────────────────
+          echo
+          echo "=== APK FILES ==="
+          find . -name "*.apk" -type f -print
+
+          echo
+          echo "=== AAB FILES ==="
+          find . -name "*.aab" -type f -print
+
+      # ---------------------------------------------------------
+      # UPLOAD APK
+      # ---------------------------------------------------------
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: QuikFlex-test-apk
-          path: |
-            **/*.apk
+          name: QuikFlex-APK
+          path: "**/*.apk"
+          if-no-files-found: error
+
+      # ---------------------------------------------------------
+      # UPLOAD AAB
+      # ---------------------------------------------------------
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: QuikFlex-AAB
+          path: "**/*.aab"
           if-no-files-found: error
