@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -24,6 +24,15 @@ jobs:
 
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
+
+      - name: Configure Bubblewrap
+        run: |
+          bubblewrap updateConfig \
+            --jdkPath="$JAVA_HOME" \
+            --androidSdkPath="$ANDROID_HOME"
+
+      - name: Verify Bubblewrap environment
+        run: bubblewrap doctor
 
       - name: Create signing key
         run: |
@@ -67,7 +76,7 @@ jobs:
             "webManifestUrl": "https://quikflex.github.io/images/site.webmanifest",
             "orientation": "default",
             "minSdkVersion": 19,
-            "generatorApp": "Bubblewrap",
+            "generatorApp": "bubblewrap-cli",
             "shortcuts": [],
             "features": {},
             "alphaDependencies": {
@@ -81,7 +90,7 @@ jobs:
 
       - name: Generate Android project
         run: |
-          echo "n" | bubblewrap update \
+          bubblewrap update \
             --manifest=twa-manifest.json \
             --skipVersionUpgrade
 
@@ -92,8 +101,8 @@ jobs:
         run: |
           bubblewrap build \
             --manifest=twa-manifest.json \
-            --signingKeyPath=./android.keystore \
-            --signingKeyAlias=quikflex
+            --signingKeyPath="./android.keystore" \
+            --signingKeyAlias="quikflex"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
