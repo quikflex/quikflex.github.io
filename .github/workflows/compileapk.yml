@@ -1,37 +1,145 @@
-name: Test Bubblewrap Container
+name: Build QuikFlex Android
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     container:
       image: ghcr.io/googlechromelabs/bubblewrap:1.25.0
 
     steps:
-      - name: Inspect container
+      # ─────────────────────────────────────────────
+      # Get the website
+      # ─────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ─────────────────────────────────────────────
+      # Check the Bubblewrap container
+      # ─────────────────────────────────────────────
+      - name: Check Java and Bubblewrap
         run: |
-          echo "=== USER ==="
-          whoami
+          echo "=== JAVA ==="
+          java -version
 
           echo "=== BUBBLEWRAP ==="
           which bubblewrap
-          type bubblewrap
-          npm list -g @bubblewrap/cli || true
 
-          echo "=== JAVA ==="
-          which java || true
-          java -version || true
+          echo "=== BUBBLEWRAP CONFIG ==="
+          cat /root/.bubblewrap/config.json
 
-          echo "=== CONFIG ==="
-          ls -la /root/.bubblewrap || true
-          cat /root/.bubblewrap/config.json || true
-
-          echo "=== ENVIRONMENT ==="
-          env | grep -E 'JAVA|ANDROID|BUBBLE' || true
-
-      - name: Run Bubblewrap version
+      # ─────────────────────────────────────────────
+      # Generate temporary signing key
+      # ─────────────────────────────────────────────
+      - name: Generate test keystore
         run: |
-          bubblewrap --version
+          keytool \
+            -genkeypair \
+            -v \
+            -keystore android.keystore \
+            -alias quikflex \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass android \
+            -keypass android \
+            -dname "CN=QuikFlex, OU=Development, O=QuikFlex, L=Port Moresby, ST=National Capital District, C=PG"
+
+          echo "Test keystore created."
+
+      # ─────────────────────────────────────────────
+      # Create Bubblewrap manifest
+      # ─────────────────────────────────────────────
+      - name: Create TWA manifest
+        run: |
+          cat > twa-manifest.json <<'EOF'
+          {
+            "packageId": "com.quikflex.app",
+            "host": "quikflex.github.io",
+            "name": "QuikFlex",
+            "launcherName": "QuikFlex",
+            "display": "standalone",
+
+            "themeColor": "#f9f9f9",
+            "themeColorDark": "#000000",
+
+            "navigationColor": "#f9f9f9",
+            "navigationColorDark": "#000000",
+            "navigationDividerColor": "#00000000",
+
+            "backgroundColor": "#1fe009",
+
+            "enableNotifications": true,
+
+            "startUrl": "/app.html",
+
+            "iconUrl": "https://quikflex.github.io/images/web-app-manifest-512x512.png",
+            "maskableIconUrl": "https://quikflex.github.io/images/web-app-manifest-512x512.png",
+
+            "splashScreenFadeOutDuration": 300,
+
+            "signingKey": {
+              "path": "./android.keystore",
+              "alias": "quikflex"
+            },
+
+            "appVersionCode": 1,
+            "appVersion": "1.0.0",
+
+            "webManifestUrl": "https://quikflex.github.io/images/site.webmanifest",
+
+            "orientation": "default",
+            "minSdkVersion": 19,
+
+            "generatorApp": "Bubblewrap",
+
+            "shortcuts": [],
+            "features": {},
+
+            "alphaDependencies": {
+              "enabled": false
+            },
+
+            "isChromeOSOnly": false,
+            "isMetaQuest": false,
+
+            "additionalTrustedOrigins": []
+          }
+          EOF
+
+          echo "Manifest created:"
+          cat twa-manifest.json
+
+      # ─────────────────────────────────────────────
+      # Update Bubblewrap project
+      # ─────────────────────────────────────────────
+      - name: Update Bubblewrap project
+        run: |
+          bubblewrap update \
+            --manifest=twa-manifest.json \
+            --skipVersionUpgrade
+
+      # ─────────────────────────────────────────────
+      # Build Android APK
+      # ─────────────────────────────────────────────
+      - name: Build APK
+        run: |
+          bubblewrap build \
+            --config=twa-manifest.json
+
+      # ─────────────────────────────────────────────
+      # Upload APK
+      # ─────────────────────────────────────────────
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: QuikFlex-test-apk
+          path: |
+            **/*.apk
+          if-no-files-found: error
