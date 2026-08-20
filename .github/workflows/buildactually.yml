@@ -4,12 +4,17 @@ on:
   push:
     branches:
       - main
+
   workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -40,19 +45,43 @@ jobs:
 
       - name: Prepare Pages directory
         run: |
+          set -e
+
+          rm -rf _site
+          mkdir -p _site
+
+          echo "=== COPYING WEBSITE ==="
+
+          # Copy normal website files/directories
+          find . -maxdepth 1 -mindepth 1 \
+            ! -name ".git" \
+            ! -name "_site" \
+            ! -name ".well-known" \
+            -exec cp -r {} _site/ \;
+
+          echo "=== CREATING .well-known ==="
+
           mkdir -p _site/.well-known
 
-          # Copy the entire website
-          cp -r ./* _site/ 2>/dev/null || true
+          cp .well-known/assetlinks.json \
+             _site/.well-known/assetlinks.json
 
-          # Copy hidden files/directories explicitly
-          cp -r .well-known/* _site/.well-known/
+          echo "=== VERIFYING ASSETLINKS ==="
 
-          echo "=== DEPLOYMENT CONTENTS ==="
-          find _site -maxdepth 3 -type f | sort
+          test -f "_site/.well-known/assetlinks.json"
 
-          echo "=== ASSETLINKS ==="
+          echo "--- file ---"
+          ls -la _site/.well-known/
+
+          echo "--- contents ---"
           cat _site/.well-known/assetlinks.json
+
+          echo "=== VERIFYING WEBSITE ==="
+
+          test -f "_site/app.html"
+
+          echo "=== FINAL FILE TREE ==="
+          find _site -maxdepth 3 -type f | sort
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
