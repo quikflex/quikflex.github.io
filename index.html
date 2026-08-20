@@ -119,15 +119,26 @@
 
             color: #ccc;
 
-            font-size: 19px;
+            font-size: 20px;
             line-height: 1.5;
         }
 
-        .download-button {
-            display: inline-block;
+        .device-message {
+            margin-top: 30px;
 
-            margin-top: 24px;
-            padding: 14px 24px;
+            color: #fff;
+
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        .install-button {
+            display: block;
+
+            width: 100%;
+
+            margin-top: 16px;
+            padding: 14px 20px;
 
             background: #fff;
             color: #000;
@@ -135,7 +146,7 @@
             border-radius: 14px;
 
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
 
             text-decoration: none;
 
@@ -144,12 +155,85 @@
                 opacity 0.15s ease;
         }
 
-        .download-button:hover {
+        .install-button:hover {
             opacity: 0.9;
         }
 
-        .download-button:active {
-            transform: scale(0.96);
+        .install-button:active {
+            transform: scale(0.97);
+        }
+
+        .secondary-button {
+            display: block;
+
+            width: 100%;
+
+            margin-top: 10px;
+            padding: 13px 20px;
+
+            background: #111;
+            color: #fff;
+
+            border: 1px solid #292929;
+            border-radius: 14px;
+
+            font-size: 15px;
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+        .secondary-button:hover {
+            background: #181818;
+        }
+
+        .instructions {
+            display: none;
+
+            margin-top: 20px;
+
+            padding: 20px;
+
+            background: #111;
+
+            border: 1px solid #222;
+            border-radius: 18px;
+
+            text-align: left;
+        }
+
+        .instructions.active {
+            display: block;
+        }
+
+        .instructions h2 {
+            margin: 0 0 12px;
+
+            font-size: 20px;
+        }
+
+        .instructions p {
+            margin: 8px 0;
+
+            color: #ccc;
+
+            font-size: 15px;
+            line-height: 1.55;
+        }
+
+        .instructions ol {
+            margin: 14px 0 0;
+
+            padding-left: 22px;
+
+            color: #ccc;
+
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .instructions li {
+            padding-left: 3px;
         }
 
         .features {
@@ -175,7 +259,7 @@
         .feature strong {
             display: block;
 
-            font-size: 14px;
+            font-size: 15px;
         }
 
         .feature span {
@@ -185,53 +269,8 @@
 
             color: #999;
 
-            font-size: 12px;
-            line-height: 1.4;
-        }
-
-        .instructions {
-            display: none;
-
-            margin-top: 32px;
-
-            padding: 20px;
-
-            background: #111;
-
-            border: 1px solid #222;
-            border-radius: 18px;
-
-            text-align: left;
-        }
-
-        .instructions.active {
-            display: block;
-        }
-
-        .instructions h2 {
-            margin: 0 0 12px;
-
-            font-size: 18px;
-        }
-
-        .instructions p {
-            margin: 8px 0;
-
-            color: #ccc;
-
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .instructions ol {
-            margin: 12px 0 0;
-
-            padding-left: 22px;
-
-            color: #ccc;
-
-            font-size: 14px;
-            line-height: 1.7;
+            font-size: 13px;
+            line-height: 1.45;
         }
 
         .offline {
@@ -239,7 +278,8 @@
 
             color: #777;
 
-            font-size: 13px;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         footer {
@@ -266,7 +306,7 @@
             }
 
             .tagline {
-                font-size: 17px;
+                font-size: 18px;
             }
 
             .features {
@@ -292,12 +332,102 @@
         Skainim Flex card bilong yu na topap long sampela sekon tasol.
     </p>
 
-    <a
-        class="download-button"
-        href="https://github.com/quikflex/quikflex.github.io/releases/download/v1.0.0-release/QuikFlex.v1.0.0.apk"
+
+    <!-- ANDROID -->
+
+    <div
+        id="androidInstall"
+        style="display: none;"
     >
-        Install APK
-    </a>
+
+        <p class="device-message">
+            📱 Yu stap long Android
+        </p>
+
+        <a
+            class="install-button"
+            href="https://github.com/quikflex/quikflex.github.io/releases/download/v1.0.0-release/QuikFlex.v1.0.0.apk"
+        >
+            GET QUIKFLEX
+        </a>
+
+        <button
+            class="secondary-button"
+            onclick="toggleInstructions('androidInstructions')"
+        >
+            Mi gat hevi long installim
+        </button>
+
+    </div>
+
+
+    <!-- IOS -->
+
+    <div
+        id="iosInstall"
+        style="display: none;"
+    >
+
+        <p class="device-message">
+            📱 Yu stap long iPhone
+        </p>
+
+        <button
+            class="install-button"
+            onclick="toggleInstructions('iphoneInstructions')"
+        >
+            ADD QUIKFLEX LONG HOME SCREEN
+        </button>
+
+        <p
+            style="
+                margin: 10px 0 0;
+                color: #777;
+                font-size: 13px;
+            "
+        >
+            Yu mas bihainim ol step daunbilo.
+        </p>
+
+    </div>
+
+
+    <!-- UNKNOWN DEVICE -->
+
+    <div
+        id="unknownInstall"
+        style="display: none;"
+    >
+
+        <p class="device-message">
+            Yu ken kisim QuikFlex long fon bilong yu.
+        </p>
+
+        <a
+            class="install-button"
+            href="https://github.com/quikflex/quikflex.github.io/releases/download/v1.0.0-release/QuikFlex.v1.0.0.apk"
+        >
+            GET QUIKFLEX
+        </a>
+
+        <button
+            class="secondary-button"
+            onclick="toggleInstructions('iphoneInstructions')"
+        >
+            Help bilong iPhone
+        </button>
+
+        <button
+            class="secondary-button"
+            onclick="toggleInstructions('androidInstructions')"
+        >
+            Help bilong Android
+        </button>
+
+    </div>
+
+
+    <!-- IPHONE INSTRUCTIONS -->
 
     <section
         id="iphoneInstructions"
@@ -305,22 +435,32 @@
     >
 
         <h2>
-            Pasim QuikFlex long iPhone
+            📱 Pasim QuikFlex long iPhone
         </h2>
 
         <p>
-            Yu ken pasim QuikFlex olsem app long Safari.
+            QuikFlex inap stap olsem app long Home Screen bilong yu.
         </p>
 
         <ol>
             <li>Opim QuikFlex long Safari.</li>
             <li>Pressim Share button.</li>
-            <li>Pressim More.</li>
-            <li>Makim "Add to Home Screen".</li>
-            <li>Pressim "Add".</li>
+            <li>Pressim More sapos yu lukim dispela.</li>
+            <li>
+                Makim
+                <strong>"Add to Home Screen"</strong>.
+            </li>
+            <li>Pressim <strong>"Add"</strong>.</li>
         </ol>
 
+        <p>
+            Nau yu ken painim QuikFlex long Home Screen bilong yu.
+        </p>
+
     </section>
+
+
+    <!-- ANDROID INSTRUCTIONS -->
 
     <section
         id="androidInstructions"
@@ -328,46 +468,71 @@
     >
 
         <h2>
-            Pasim QuikFlex long Android
+            📱 Pasim QuikFlex long Android
         </h2>
 
         <p>
-            Yu ken pasim QuikFlex olsem app long browser bilong yu.
+            Sapos install i no wok, bihainim ol dispela step:
         </p>
 
         <ol>
-            <li>Opim QuikFlex long Chrome.</li>
-            <li>Pressim tripela dot.</li>
-            <li>Makim "Install app" o "Add to Home screen".</li>
-            <li>Konfomim installation.</li>
+            <li>Opim dispela website long Chrome.</li>
+            <li>
+                Pressim tripela dot
+                <strong>⋮</strong>
+                antap.
+            </li>
+            <li>
+                Makim
+                <strong>"Install app"</strong>
+                o
+                <strong>"Add to Home screen"</strong>.
+            </li>
+            <li>
+                Pressim
+                <strong>"Install"</strong>
+                o
+                <strong>"Add"</strong>.
+            </li>
         </ol>
 
+        <p>
+            Sapos yu daunlodenim app pinis, opim dispela file na bihainim tok bilong fon.
+        </p>
+
     </section>
+
+
+    <!-- FEATURES -->
 
     <section class="features">
 
         <div class="feature">
-            <strong>Skain</strong>
+            <strong>📷 Skain</strong>
+
             <span>
                 Pointim kamera long Flex card bilong yu.
             </span>
         </div>
 
         <div class="feature">
-            <strong>Detek</strong>
+            <strong>🔢 Detek</strong>
+
             <span>
                 QuikFlex bai ritim namba bilong card bilong yu.
             </span>
         </div>
 
         <div class="feature">
-            <strong>Topap</strong>
+            <strong>📱 Topap</strong>
+
             <span>
                 Konfomim code na fon bilong yu bai mekim arapela.
             </span>
         </div>
 
     </section>
+
 
     <p class="offline">
         Taim yu pasim pinis, QuikFlex inap skainim card maski i no gat internet.
@@ -379,36 +544,54 @@
 
 </main>
 
+
 <script>
     const userAgent =
         navigator.userAgent.toLowerCase();
 
     const isIOS =
-        /iphone|ipad|ipod/.test(
-            userAgent
-        );
+        /iphone|ipad|ipod/.test(userAgent);
 
     const isAndroid =
-        /android/.test(
-            userAgent
-        );
+        /android/.test(userAgent);
 
-    if (isIOS) {
-        document
-            .getElementById(
-                "iphoneInstructions"
-            )
-            .classList
-            .add("active");
+
+    function toggleInstructions(id) {
+
+        const element =
+            document.getElementById(id);
+
+        element.classList.toggle("active");
+
+        if (element.classList.contains("active")) {
+
+            element.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+        }
     }
 
-    if (isAndroid) {
-        document
-            .getElementById(
-                "androidInstructions"
-            )
-            .classList
-            .add("active");
+
+    if (isIOS) {
+
+        document.getElementById(
+            "iosInstall"
+        ).style.display = "block";
+
+    } else if (isAndroid) {
+
+        document.getElementById(
+            "androidInstall"
+        ).style.display = "block";
+
+    } else {
+
+        document.getElementById(
+            "unknownInstall"
+        ).style.display = "block";
+
     }
 </script>
 
