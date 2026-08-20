@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.quikflex.app",
+        "sha256_cert_fingerprints": ["CF:F3:97:79:E5:00:5A:CB:E3:08:4C:4E:F9:B6:CD:C7:B9:24:9D:61:12:BA:B1:5E:B0:7D:BE:F0:1F:6A:09:5A"]
+      }
+    }]
