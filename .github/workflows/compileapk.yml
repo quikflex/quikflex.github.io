@@ -7,32 +7,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    container:
+      image: ghcr.io/googlechromelabs/bubblewrap:1.25.0
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-
-      - name: Setup Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Install Bubblewrap
-        run: npm install -g @bubblewrap/cli
-
-      - name: Configure Bubblewrap
+      - name: Check Bubblewrap
         run: |
-          bubblewrap updateConfig \
-            --jdkPath="$JAVA_HOME" \
-            --androidSdkPath="$ANDROID_HOME"
-
-      - name: Verify Bubblewrap environment
-        run: bubblewrap doctor
+          bubblewrap --version
+          java -version
+          bubblewrap doctor
 
       - name: Create signing key
         run: |
@@ -108,4 +94,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: QuikFlex-APK
-          path: app-release-signed.apk
+          path: |
+            app-release-signed.apk
+            app-release-bundle.aab
