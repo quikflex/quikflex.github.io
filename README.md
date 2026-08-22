@@ -8,7 +8,7 @@ QuikFlex is an offline-first Progressive Web App (PWA) for scanning mobile recha
 
 It uses camera-based image capture, Optical Character Recognition (OCR), automatic carrier detection, and automatic USSD to make voucher recharging faster and easier.
 
-***QuikFlex does not store any voucher codes in the app or on our servers. The app uses on-device AI technologies to read the digits, and no information is sent anywhere.***
+***QuikFlex does not store any voucher codes in the app or on our servers. The app uses on-device AI technologies to read the digits, and no voucher codes are sent anywhere.***
 
 ## Features
 
